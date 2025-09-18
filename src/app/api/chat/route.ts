@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Message as VercelChatMessage } from "ai";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -7,7 +6,13 @@ import { HttpResponseOutputParser } from "langchain/output_parsers";
 
 export const runtime = "edge";
 
-const formatMessage = (message: VercelChatMessage) => {
+interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp?: Date;
+}
+
+const formatMessage = (message: ChatMessage) => {
   return `${message.role}: ${message.content}`;
 };
 
@@ -23,7 +28,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const messages = body.messages ?? [];
-    const lastMessage = messages[messages.length - 1];
+    // const lastMessage = messages[messages.length - 1];
     
     // 临时使用 Mock 模式（因为 OpenAI 配额问题）
     // const mockResponses = [
@@ -97,8 +102,9 @@ export async function POST(req: NextRequest) {
       },
     });
     
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('API Error:', e);
-    return NextResponse.json({ error: e.message }, { status: e.status ?? 500 });
+    const error = e as Error;
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

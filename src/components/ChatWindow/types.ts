@@ -1,6 +1,6 @@
-// ChatMessage 接口定义
+// ChatMessage 接口定义 - 与 Vercel AI SDK 对齐
 export interface ChatMessage {
-  role: 'user' | 'ai';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp?: Date;
 }
