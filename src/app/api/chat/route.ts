@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { StructuredResponseSchema } from "@/lib/schemas";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 export const runtime = "edge";
 

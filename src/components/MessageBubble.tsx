@@ -3,13 +3,15 @@
 import React from 'react';
 import { ChatMessage } from '../components/ChatWindow/types';
 import { EnhancedMarkdownRenderer } from './EnhancedMarkdownRenderer';
+import { MessageFeedback } from './MessageFeedback';
 
 interface MessageBubbleProps {
   message: ChatMessage;
   className?: string;
+  onFeedback?: (messageId: string, feedback: 'like' | 'dislike') => void;
 }
 
-export function MessageBubble({ message, className = '' }: MessageBubbleProps) {
+export function MessageBubble({ message, className = '', onFeedback }: MessageBubbleProps) {
   const formatTime = (timestamp?: Date) => {
     if (!timestamp) return '';
     return timestamp.toLocaleTimeString('zh-CN', {
@@ -27,28 +29,41 @@ export function MessageBubble({ message, className = '' }: MessageBubbleProps) {
       } ${className}`}
     >
       {message.role === 'user' ? (
-        // 用户消息保持简单样式
-        <div className="bg-blue-500 text-white p-3 rounded-lg">
-          <div className="text-sm whitespace-pre-wrap">
+        // 用户消息 - 更自然的样式
+        <div className="bg-blue-500 text-white p-4 rounded-2xl rounded-br-md shadow-sm">
+          <div className="text-sm whitespace-pre-wrap leading-relaxed">
             {message.content}
           </div>
           {message.timestamp && (
-            <div className="text-xs mt-1 text-blue-100">
+            <div className="text-xs mt-2 text-blue-100 opacity-80">
               {formatTime(message.timestamp)}
             </div>
           )}
         </div>
       ) : (
-        // AI消息使用增强的Markdown渲染器，支持交互式元素
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-4">
+        // AI消息 - 无边框，更自然的文档阅读体验
+        <div className="group">
+          <div className="prose prose-lg max-w-none dark:prose-invert">
             <EnhancedMarkdownRenderer content={message.content} />
           </div>
-          {message.timestamp && (
-            <div className="px-4 pb-3 text-xs text-gray-500 border-t border-gray-100">
-              {formatTime(message.timestamp)}
+          
+          {/* 消息操作栏 */}
+          <div className="flex items-center justify-between mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="flex items-center space-x-2">
+              {message.timestamp && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {formatTime(message.timestamp)}
+                </span>
+              )}
             </div>
-          )}
+            
+            <div className="flex items-center space-x-2">
+              <MessageFeedback 
+                messageId={message.timestamp?.getTime().toString() || 'unknown'}
+                onFeedback={onFeedback}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

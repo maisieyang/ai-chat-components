@@ -6,3 +6,5 @@ export { ScrollToBottomButton } from './ScrollToBottomButton';
 export { CodeCopyButton } from './CodeCopyButton';
 export { CollapsibleSection } from './CollapsibleSection';
 export { EnhancedMarkdownRenderer } from './EnhancedMarkdownRenderer';
+export { ThemeToggle } from './ThemeToggle';
+export { MessageFeedback } from './MessageFeedback';
