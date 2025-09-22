@@ -4,7 +4,19 @@ import React from 'react';
 import { useTheme } from '../hooks/useTheme';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, mounted } = useTheme();
+
+  // 防止服务端渲染不匹配
+  if (!mounted) {
+    return (
+      <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+        <div className="px-3 py-1.5 rounded-md text-sm font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+          <span className="mr-1">💻</span>
+          系统
+        </div>
+      </div>
+    );
+  }
 
   const themes = [
     { value: 'light', label: '浅色', icon: '☀️' },

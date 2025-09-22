@@ -7,8 +7,10 @@ type Theme = 'light' | 'dark' | 'system';
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>('system');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // 从localStorage读取保存的主题
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
@@ -17,6 +19,8 @@ export function useTheme() {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const updateResolvedTheme = () => {
       if (theme === 'system') {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -38,13 +42,19 @@ export function useTheme() {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [theme, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     // 应用主题到document
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(resolvedTheme);
-  }, [resolvedTheme]);
+    
+    // 调试信息
+    console.log('Theme applied:', resolvedTheme);
+    console.log('HTML classes:', document.documentElement.className);
+  }, [resolvedTheme, mounted]);
 
   const setThemeAndSave = (newTheme: Theme) => {
     setTheme(newTheme);
@@ -55,5 +65,6 @@ export function useTheme() {
     theme,
     resolvedTheme,
     setTheme: setThemeAndSave,
+    mounted,
   };
 }

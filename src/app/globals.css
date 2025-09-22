@@ -22,6 +22,15 @@
   --chat-text-secondary: #9ca3af;
 }
 
+/* 确保暗黑模式类正确应用 */
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
