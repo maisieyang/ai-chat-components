@@ -9,6 +9,7 @@ import { ErrorMessage } from '../ErrorMessage';
 import { ScrollToBottomButton } from '../ScrollToBottomButton';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { ThemeToggle } from '../ThemeToggle';
+import { ThemeTest } from '../ThemeTest';
 
 export function ChatWindow({ 
   apiUrl, 
@@ -68,7 +69,10 @@ export function ChatWindow({
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
             AI Chat Assistant
           </h1>
-          <ThemeToggle />
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            <ThemeTest />
+          </div>
         </div>
 
         {/* 错误信息显示 */}

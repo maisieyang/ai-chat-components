@@ -54,6 +54,11 @@ export function useTheme() {
     // 调试信息
     console.log('Theme applied:', resolvedTheme);
     console.log('HTML classes:', document.documentElement.className);
+    
+    // 强制重新渲染
+    setTimeout(() => {
+      console.log('After timeout - HTML classes:', document.documentElement.className);
+    }, 100);
   }, [resolvedTheme, mounted]);
 
   const setThemeAndSave = (newTheme: Theme) => {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
+    <div class="min-h-screen p-8">
+        <h1 class="text-3xl font-bold mb-8">主题切换测试</h1>
+        
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">当前主题状态：</h2>
+            <p>HTML类名: <span id="html-class" class="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded"></span></p>
+            <p>系统偏好: <span id="system-pref" class="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded"></span></p>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">主题切换按钮：</h2>
+            <div class="flex space-x-4">
+                <button onclick="setTheme('light')" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    浅色主题
+                </button>
+                <button onclick="setTheme('dark')" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">
+                    深色主题
+                </button>
+                <button onclick="setTheme('system')" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    系统主题
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">测试内容：</h2>
+            <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                <p class="text-gray-700 dark:text-gray-300">这是一个测试卡片，应该根据主题改变颜色。</p>
+                <code class="block mt-2 p-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">
+                    console.log('主题测试');
+                </code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(theme) {
+            document.documentElement.classList.remove('light', 'dark');
+            if (theme === 'system') {
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.classList.add(systemTheme);
+            } else {
+                document.documentElement.classList.add(theme);
+            }
+            updateStatus();
+        }
+
+        function updateStatus() {
+            document.getElementById('html-class').textContent = document.documentElement.className;
+            document.getElementById('system-pref').textContent = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // 初始化
+        updateStatus();
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateStatus);
+    </script>
+</body>
+</html>
