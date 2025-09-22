@@ -43,37 +43,19 @@ export function useChat(options: UseChatOptions): UseChatReturn {
     setRetryCount(0);
   }, []);
 
-  // 流式处理
-  const handleStreaming = useCallback(async (response: Response) => {
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
-    // 创建AI消息
+  // 处理结构化响应
+  const handleStructuredResponse = useCallback(async (response: Response) => {
+    const data = await response.json();
+    
+    // 创建AI消息，包含结构化内容
     const aiMessage: ChatMessage = {
       role: 'assistant',
-      content: '',
-      timestamp: new Date()
+      content: data.content || 'No content received',
+      timestamp: new Date(),
+      structuredContent: data // 将整个响应作为结构化内容
     };
 
     setMessages(prev => [...prev, aiMessage]);
-
-    // 读取流式数据
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      setMessages(prev => 
-        prev.map((msg, index) => 
-          index === prev.length - 1 && msg.role === 'assistant'
-            ? { ...msg, content: msg.content + chunk }
-            : msg
-        )
-      );
-    }
   }, []);
 
   // 发送消息的核心逻辑
@@ -111,8 +93,8 @@ export function useChat(options: UseChatOptions): UseChatReturn {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // 3. 处理流式响应
-      await handleStreaming(response);
+      // 3. 处理结构化响应
+      await handleStructuredResponse(response);
 
       // 调用成功回调
       const lastMessage = newMessages[newMessages.length - 1];
@@ -140,7 +122,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
       // 调用完成回调
       optionsRef.current.onComplete?.();
     }
-  }, [isLoading, handleStreaming]);
+  }, [isLoading, handleStructuredResponse]);
 
   // 发送消息
   const sendMessage = useCallback(async (content: string) => {
