@@ -6,12 +6,12 @@ export default function Home() {
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            🤖 AI Chat with Structured Output
-          </h1>
-          <p className="text-lg text-gray-600 mb-6">
-            体验使用LangChain.js和Vercel AI SDK的结构化响应，包含Markdown、代码高亮、表格等丰富内容
-          </p>
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">
+              🤖 AI Chat with Cursor-style Output
+            </h1>
+            <p className="text-lg text-gray-600 mb-6">
+              体验像Cursor一样清晰优雅的Markdown输出，包含代码高亮、表格、列表等丰富内容
+            </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
             <h3 className="font-semibold text-blue-800 mb-2">💡 试试这些提示：</h3>
             <ul className="text-sm text-blue-700 text-left space-y-1">
@@ -23,11 +23,11 @@ export default function Home() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto">
-          <ChatWindow 
-            apiUrl="/api/chat"
-            placeholder="输入您的问题，AI将提供结构化的技术回答..."
-            className="mx-auto"
-          />
+              <ChatWindow 
+                apiUrl="/api/chat"
+                placeholder="输入您的问题，AI将提供像Cursor一样清晰优雅的Markdown回答..."
+                className="mx-auto"
+              />
         </div>
       </div>
     </div>

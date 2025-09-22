@@ -43,16 +43,16 @@ export function useChat(options: UseChatOptions): UseChatReturn {
     setRetryCount(0);
   }, []);
 
-  // 处理结构化响应
-  const handleStructuredResponse = useCallback(async (response: Response) => {
+  // 处理Markdown响应
+  const handleMarkdownResponse = useCallback(async (response: Response) => {
     const data = await response.json();
     
-    // 创建AI消息，包含结构化内容
+    // 创建AI消息，直接使用Markdown内容
     const aiMessage: ChatMessage = {
       role: 'assistant',
       content: data.content || 'No content received',
       timestamp: new Date(),
-      structuredContent: data // 将整个响应作为结构化内容
+      // 不再需要structuredContent，直接使用content
     };
 
     setMessages(prev => [...prev, aiMessage]);
@@ -93,8 +93,8 @@ export function useChat(options: UseChatOptions): UseChatReturn {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // 3. 处理结构化响应
-      await handleStructuredResponse(response);
+          // 3. 处理Markdown响应
+          await handleMarkdownResponse(response);
 
       // 调用成功回调
       const lastMessage = newMessages[newMessages.length - 1];
@@ -122,7 +122,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
       // 调用完成回调
       optionsRef.current.onComplete?.();
     }
-  }, [isLoading, handleStructuredResponse]);
+      }, [isLoading, handleMarkdownResponse]);
 
   // 发送消息
   const sendMessage = useCallback(async (content: string) => {
