@@ -31,11 +31,11 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
       {message.role === 'user' ? (
         // 用户消息 - 更自然的样式
         <div className="bg-blue-500 text-white p-4 rounded-2xl rounded-br-md shadow-sm">
-          <div className="text-sm whitespace-pre-wrap leading-relaxed">
+          <div className="text-base whitespace-pre-wrap leading-relaxed">
             {message.content}
           </div>
           {message.timestamp && (
-            <div className="text-xs mt-2 text-blue-100 opacity-80">
+            <div className="text-sm mt-2 text-blue-100 opacity-80">
               {formatTime(message.timestamp)}
             </div>
           )}
@@ -43,7 +43,7 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
       ) : (
         // AI消息 - 无边框，更自然的文档阅读体验
         <div className="group">
-          <div className="prose prose-lg max-w-none dark:prose-invert">
+          <div className="prose prose-lg max-w-none dark:prose-invert text-base leading-relaxed">
             <EnhancedMarkdownRenderer content={message.content} />
           </div>
           
@@ -51,7 +51,7 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
           <div className="flex items-center justify-between mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <div className="flex items-center space-x-2">
               {message.timestamp && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {formatTime(message.timestamp)}
                 </span>
               )}

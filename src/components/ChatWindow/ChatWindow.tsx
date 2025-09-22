@@ -9,7 +9,6 @@ import { ErrorMessage } from '../ErrorMessage';
 import { ScrollToBottomButton } from '../ScrollToBottomButton';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { ThemeToggle } from '../ThemeToggle';
-import { ThemeTest } from '../ThemeTest';
 
 export function ChatWindow({ 
   apiUrl, 
@@ -66,13 +65,10 @@ export function ChatWindow({
       <div className={`flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200 ${className}`}>
         {/* 顶部工具栏 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
             AI Chat Assistant
           </h1>
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <ThemeTest />
-          </div>
+          <ThemeToggle />
         </div>
 
         {/* 错误信息显示 */}
@@ -93,13 +89,13 @@ export function ChatWindow({
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
               <div className="text-center max-w-md">
                 <div className="text-6xl mb-4">🤖</div>
-                <h2 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">
+                <h2 className="text-3xl font-semibold mb-2 text-gray-900 dark:text-white">
                   AI Chat Assistant
                 </h2>
-                <p className="text-lg mb-6 text-gray-600 dark:text-gray-300">
+                <p className="text-xl mb-6 text-gray-600 dark:text-gray-300">
                   开始对话，获得智能回答
                 </p>
-                <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="space-y-2 text-base text-gray-500 dark:text-gray-400">
                   <p>💡 尝试问："解释React Hooks的工作原理"</p>
                   <p>💡 或者："写一个Python函数来计算斐波那契数列"</p>
                 </div>
@@ -116,8 +112,8 @@ export function ChatWindow({
               ))}
               {isLoading && (
                 <div className="mb-6 max-w-[90%] mr-auto">
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                  <div className="flex items-center text-base text-gray-500 dark:text-gray-400">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
                     AI正在思考中...
                   </div>
                 </div>
@@ -143,7 +139,7 @@ export function ChatWindow({
                   placeholder={placeholder}
                   disabled={isLoading}
                   rows={1}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed resize-none text-base leading-relaxed"
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -156,7 +152,7 @@ export function ChatWindow({
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
+                className="px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 font-medium text-base"
               >
                 {isLoading ? '发送中...' : '发送'}
               </button>

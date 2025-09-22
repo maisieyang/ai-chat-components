@@ -10,7 +10,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-        <div className="px-3 py-1.5 rounded-md text-sm font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+        <div className="px-3 py-1.5 rounded-md text-base font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
           <span className="mr-1">💻</span>
           系统
         </div>
@@ -30,7 +30,7 @@ export function ThemeToggle() {
         <button
           key={value}
           onClick={() => setTheme(value)}
-          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+          className={`px-3 py-1.5 rounded-md text-base font-medium transition-colors duration-200 ${
             theme === value
               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'

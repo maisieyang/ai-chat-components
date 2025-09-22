@@ -31,6 +31,93 @@ html.light {
   color-scheme: light;
 }
 
+/* 强制暗黑模式样式 - 确保所有文字可见 */
+.dark {
+  background-color: #0f0f0f !important;
+  color: #f9fafb !important;
+}
+
+/* 背景色 */
+.dark .bg-white {
+  background-color: #1a1a1a !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #374151 !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #4b5563 !important;
+}
+
+/* 文字颜色 */
+.dark .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+.dark .text-gray-800 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.dark .text-gray-300 {
+  color: #4b5563 !important;
+}
+
+/* 边框颜色 */
+.dark .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+.dark .border-gray-300 {
+  border-color: #4b5563 !important;
+}
+
+.dark .border-gray-100 {
+  border-color: #374151 !important;
+}
+
+/* 特殊元素 */
+.dark .text-blue-100 {
+  color: #dbeafe !important;
+}
+
+.dark .text-blue-200 {
+  color: #bfdbfe !important;
+}
+
+/* 确保所有文字在暗黑模式下可见 */
+.dark * {
+  color: inherit;
+}
+
+.dark .text-black {
+  color: #f9fafb !important;
+}
+
+.dark .text-white {
+  color: #f9fafb !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -41,8 +128,34 @@ html.light {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 确保所有文本元素都有良好的字体渲染 */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 特别优化小字体 */
+.text-xs, .text-sm {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0.025em;
+}
+
+/* 优化代码字体 */
+code, pre, .font-mono {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 /* 代码高亮暗黑模式样式 */

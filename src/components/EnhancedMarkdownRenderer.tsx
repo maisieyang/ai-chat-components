@@ -78,7 +78,7 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
   const sections = processContent(content);
 
   return (
-    <div className="prose prose-lg max-w-none">
+    <div className="prose prose-lg max-w-none text-base leading-relaxed">
       {sections.map((section, index) => {
         if (section.type === 'collapsible') {
           return (
