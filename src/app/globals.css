@@ -11,15 +11,67 @@
   --chat-text-secondary: #6b7280;
 }
 
-/* 暗黑模式 */
+/* 暗黑模式 - 使用ChatGPT官方配色 */
 .dark {
-  --background: #0f0f0f;
-  --foreground: #f9fafb;
-  --chat-bg: #0f0f0f;
-  --chat-surface: #1a1a1a;
-  --chat-border: #374151;
-  --chat-text: #f9fafb;
-  --chat-text-secondary: #9ca3af;
+  --background: #212121;
+  --foreground: #fff;
+  --chat-bg: #212121;
+  --chat-surface: #303030;
+  --chat-border: #ffffff26;
+  --chat-text: #fff;
+  --chat-text-secondary: #f3f3f3;
+  
+  /* ChatGPT官方配色变量 */
+  --bg-primary: #212121;
+  --bg-primary-inverted: #fff;
+  --bg-secondary: #303030;
+  --bg-tertiary: #414141;
+  --bg-scrim: #0d0d0d80;
+  --bg-elevated-primary: #303030;
+  --bg-elevated-secondary: #181818;
+  --bg-status-warning: #4a2206;
+  --bg-status-error: #4d100e;
+  --border-default: #ffffff26;
+  --border-heavy: #fff3;
+  --border-light: #ffffff0d;
+  --border-status-warning: #4a2206;
+  --border-status-error: #4d100e;
+  --text-primary: #fff;
+  --text-secondary: #f3f3f3;
+  --text-tertiary: #afafaf;
+  --text-inverted: #0d0d0d;
+  --text-inverted-static: #fff;
+  --text-accent: #66b5ff;
+  --text-status-warning: #ff9e6c;
+  --text-status-error: #ff8583;
+  --icon-primary: #e8e8e8;
+  --icon-secondary: #cdcdcd;
+  --icon-tertiary: #afafaf;
+  --icon-inverted: #0d0d0d;
+  --icon-inverted-static: #fff;
+  --icon-accent: #66b5ff;
+  --icon-status-warning: #ff9e6c;
+  --icon-status-error: #ff8583;
+  --interactive-bg-primary-default: #fff;
+  --interactive-bg-primary-hover: #fffc;
+  --interactive-bg-primary-press: #ffffffe5;
+  --interactive-bg-primary-inactive: #fff;
+  --interactive-bg-primary-selected: #fff;
+  --interactive-bg-secondary-default: #fff0;
+  --interactive-bg-secondary-hover: #ffffff1a;
+  --interactive-bg-secondary-press: #ffffff0d;
+  --interactive-bg-secondary-inactive: #fff0;
+  --interactive-bg-secondary-selected: #ffffff1a;
+  --interactive-bg-tertiary-default: #212121;
+  --interactive-bg-tertiary-hover: #181818;
+  --interactive-bg-tertiary-press: #0d0d0d;
+  --interactive-bg-tertiary-inactive: #212121;
+  --interactive-bg-tertiary-selected: #212121;
+  --interactive-bg-accent-default: #013566;
+  --interactive-bg-accent-hover: #003f7a;
+  --interactive-bg-accent-muted-hover: #394a5b;
+  --interactive-bg-accent-muted-context: #394a5b80;
+  --interactive-bg-accent-press: #004f99;
 }
 
 /* 确保暗黑模式类正确应用 */
@@ -31,78 +83,131 @@ html.light {
   color-scheme: light;
 }
 
-/* 强制暗黑模式样式 - 确保所有文字可见 */
+/* 强制暗黑模式样式 - 使用ChatGPT配色 */
 .dark {
-  background-color: #0f0f0f !important;
-  color: #f9fafb !important;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
 }
 
-/* 背景色 */
+/* 背景色 - ChatGPT配色 */
 .dark .bg-white {
-  background-color: #1a1a1a !important;
+  background-color: var(--bg-secondary) !important;
 }
 
 .dark .bg-gray-50 {
-  background-color: #1f2937 !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 .dark .bg-gray-100 {
-  background-color: #374151 !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 .dark .bg-gray-200 {
-  background-color: #4b5563 !important;
+  background-color: var(--bg-elevated-primary) !important;
 }
 
-/* 文字颜色 */
+.dark .bg-gray-800 {
+  background-color: var(--bg-elevated-secondary) !important;
+}
+
+.dark .bg-gray-900 {
+  background-color: var(--bg-primary) !important;
+}
+
+/* 文字颜色 - ChatGPT配色 */
 .dark .text-gray-900 {
-  color: #f9fafb !important;
+  color: var(--text-primary) !important;
 }
 
 .dark .text-gray-800 {
-  color: #f3f4f6 !important;
+  color: var(--text-primary) !important;
 }
 
 .dark .text-gray-700 {
-  color: #e5e7eb !important;
+  color: var(--text-secondary) !important;
 }
 
 .dark .text-gray-600 {
-  color: #d1d5db !important;
+  color: var(--text-secondary) !important;
 }
 
 .dark .text-gray-500 {
-  color: #9ca3af !important;
+  color: var(--text-tertiary) !important;
 }
 
 .dark .text-gray-400 {
-  color: #6b7280 !important;
+  color: var(--text-tertiary) !important;
 }
 
 .dark .text-gray-300 {
-  color: #4b5563 !important;
+  color: var(--text-tertiary) !important;
 }
 
-/* 边框颜色 */
+/* 边框颜色 - ChatGPT配色 */
 .dark .border-gray-200 {
-  border-color: #374151 !important;
+  border-color: var(--border-default) !important;
 }
 
 .dark .border-gray-300 {
-  border-color: #4b5563 !important;
+  border-color: var(--border-heavy) !important;
 }
 
 .dark .border-gray-100 {
-  border-color: #374151 !important;
+  border-color: var(--border-light) !important;
 }
 
-/* 特殊元素 */
+.dark .border-gray-600 {
+  border-color: var(--border-default) !important;
+}
+
+.dark .border-gray-700 {
+  border-color: var(--border-heavy) !important;
+}
+
+/* 特殊元素 - ChatGPT配色 */
 .dark .text-blue-100 {
-  color: #dbeafe !important;
+  color: var(--text-accent) !important;
 }
 
 .dark .text-blue-200 {
-  color: #bfdbfe !important;
+  color: var(--text-accent) !important;
+}
+
+.dark .text-blue-500 {
+  color: var(--text-accent) !important;
+}
+
+.dark .text-blue-600 {
+  color: var(--text-accent) !important;
+}
+
+/* 引用块暗黑模式样式 - ChatGPT配色 */
+.dark blockquote {
+  background-color: var(--bg-tertiary) !important;
+  border-left-color: var(--text-accent) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* 交互元素 - ChatGPT配色 */
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--interactive-bg-secondary-hover) !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: var(--interactive-bg-secondary-hover) !important;
+}
+
+.dark .hover\:bg-gray-600:hover {
+  background-color: var(--interactive-bg-tertiary-hover) !important;
+}
+
+.dark .hover\:bg-gray-800:hover {
+  background-color: var(--interactive-bg-tertiary-hover) !important;
 }
 
 /* 确保所有文字在暗黑模式下可见 */
@@ -111,11 +216,11 @@ html.light {
 }
 
 .dark .text-black {
-  color: #f9fafb !important;
+  color: var(--text-primary) !important;
 }
 
 .dark .text-white {
-  color: #f9fafb !important;
+  color: var(--text-primary) !important;
 }
 
 @theme inline {

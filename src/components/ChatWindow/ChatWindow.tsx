@@ -62,10 +62,10 @@ export function ChatWindow({
 
   return (
     <ErrorBoundary>
-      <div className={`flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200 ${className}`}>
+      <div className={`flex flex-col h-screen bg-white dark:bg-[var(--bg-primary)] transition-colors duration-200 ${className}`}>
         {/* 顶部工具栏 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[var(--border-default)] bg-white dark:bg-[var(--bg-primary)]">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-primary)]">
             AI Chat Assistant
           </h1>
           <ThemeToggle />
@@ -83,19 +83,19 @@ export function ChatWindow({
         {/* 聊天对话展示区域 - 全屏阅读体验 */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto px-4 py-6 bg-white dark:bg-gray-900"
+          className="flex-1 overflow-y-auto px-4 py-6 bg-white dark:bg-[var(--bg-primary)]"
         >
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-[var(--text-tertiary)]">
               <div className="text-center max-w-md">
                 <div className="text-6xl mb-4">🤖</div>
-                <h2 className="text-3xl font-semibold mb-2 text-gray-900 dark:text-white">
+                <h2 className="text-3xl font-semibold mb-2 text-gray-900 dark:text-[var(--text-primary)]">
                   AI Chat Assistant
                 </h2>
-                <p className="text-xl mb-6 text-gray-600 dark:text-gray-300">
+                <p className="text-xl mb-6 text-gray-600 dark:text-[var(--text-secondary)]">
                   开始对话，获得智能回答
                 </p>
-                <div className="space-y-2 text-base text-gray-500 dark:text-gray-400">
+                <div className="space-y-2 text-base text-gray-500 dark:text-[var(--text-tertiary)]">
                   <p>💡 尝试问："解释React Hooks的工作原理"</p>
                   <p>💡 或者："写一个Python函数来计算斐波那契数列"</p>
                 </div>
@@ -112,8 +112,8 @@ export function ChatWindow({
               ))}
               {isLoading && (
                 <div className="mb-6 max-w-[90%] mr-auto">
-                  <div className="flex items-center text-base text-gray-500 dark:text-gray-400">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
+                  <div className="flex items-center text-base text-gray-500 dark:text-[var(--text-tertiary)]">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 dark:border-[var(--text-accent)] mr-3"></div>
                     AI正在思考中...
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export function ChatWindow({
         />
 
         {/* 输入表单区域 - 全屏宽度 */}
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div className="border-t border-gray-200 dark:border-[var(--border-default)] bg-white dark:bg-[var(--bg-primary)]">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4">
             <div className="flex items-end space-x-3">
               <div className="flex-1">
@@ -139,7 +139,7 @@ export function ChatWindow({
                   placeholder={placeholder}
                   disabled={isLoading}
                   rows={1}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed resize-none text-base leading-relaxed"
+                  className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[var(--bg-tertiary)] text-gray-900 dark:text-[var(--text-primary)] placeholder-gray-500 dark:placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-[var(--text-accent)] disabled:bg-gray-100 dark:disabled:bg-[var(--bg-elevated-primary)] disabled:cursor-not-allowed resize-none text-base leading-relaxed border-0 shadow-sm"
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -152,7 +152,7 @@ export function ChatWindow({
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 font-medium text-base"
+                className="px-6 py-3 bg-gray-900 dark:bg-[var(--interactive-bg-primary-default)] text-white dark:text-[var(--text-inverted)] rounded-2xl hover:bg-gray-800 dark:hover:bg-[var(--interactive-bg-primary-hover)] disabled:bg-gray-300 dark:disabled:bg-[var(--interactive-bg-primary-inactive)] disabled:cursor-not-allowed transition-colors duration-200 font-medium text-base shadow-sm"
               >
                 {isLoading ? '发送中...' : '发送'}
               </button>
