@@ -18,18 +18,20 @@ export function ChatWindow({
   // 输入框引用
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // 使用自定义 useChat Hook
-  const {
-    messages,
-    input,
-    setInput,
-    sendMessage,
-    isLoading,
-    error,
-    retry,
-    retryCount,
-    clearMessages
-  } = useChat({
+      // 使用自定义 useChat Hook
+      const {
+        messages,
+        input,
+        setInput,
+        sendMessage,
+        isLoading,
+        error,
+        connectionStatus,
+        retry,
+        retryCount,
+        clearMessages,
+        metrics
+      } = useChat({
     apiUrl,
     onError: (error) => {
       console.error('Chat error:', error);
@@ -80,13 +82,30 @@ export function ChatWindow({
   return (
     <ErrorBoundary>
       <div className={`flex flex-col h-screen bg-bg-primary transition-colors duration-200 ${className}`}>
-        {/* 顶部工具栏 */}
-        <div className="flex items-center justify-between p-4 bg-bg-primary">
-          <h1 className="text-xl font-semibold text-text-primary">
-            AI Chat Assistant
-          </h1>
-          <ThemeToggle />
-        </div>
+            {/* 顶部工具栏 */}
+            <div className="flex items-center justify-between p-4 bg-bg-primary">
+              <div className="flex items-center space-x-3">
+                <h1 className="text-xl font-semibold text-text-primary">
+                  AI Chat Assistant
+                </h1>
+                {/* 连接状态指示器 */}
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    connectionStatus === 'connected' ? 'bg-success' :
+                    connectionStatus === 'connecting' ? 'bg-warning animate-pulse' :
+                    connectionStatus === 'error' ? 'bg-error' :
+                    'bg-text-tertiary'
+                  }`}></div>
+                  <span className="text-sm text-text-tertiary">
+                    {connectionStatus === 'connected' ? '已连接' :
+                     connectionStatus === 'connecting' ? '连接中...' :
+                     connectionStatus === 'error' ? '连接错误' :
+                     '未连接'}
+                  </span>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
 
         {/* 错误信息显示 */}
         <ErrorMessage
@@ -125,6 +144,7 @@ export function ChatWindow({
                   key={index}
                   message={message}
                   onFeedback={handleFeedback}
+                  isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
                 />
               ))}
               {isLoading && (

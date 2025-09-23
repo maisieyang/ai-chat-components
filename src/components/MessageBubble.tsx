@@ -9,9 +9,10 @@ interface MessageBubbleProps {
   message: ChatMessage;
   className?: string;
   onFeedback?: (messageId: string, feedback: 'like' | 'dislike') => void;
+  isStreaming?: boolean;
 }
 
-export function MessageBubble({ message, className = '', onFeedback }: MessageBubbleProps) {
+export function MessageBubble({ message, className = '', onFeedback, isStreaming = false }: MessageBubbleProps) {
   const formatTime = (timestamp?: Date) => {
     if (!timestamp) return '';
     return timestamp.toLocaleTimeString('zh-CN', {
@@ -50,6 +51,10 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
               <div className="flex-1 min-w-0">
                 <div className="prose prose-lg max-w-none text-base leading-relaxed">
                   <EnhancedMarkdownRenderer content={message.content} />
+                  {isStreaming && (
+                    <span className="inline-block w-2 h-4 bg-accent ml-1 animate-pulse" 
+                          style={{ animationDuration: '1s' }}></span>
+                  )}
                 </div>
                 
                 {/* 消息操作栏 */}

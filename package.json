@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/react": "^2.0.49",
     "@langchain/core": "^0.3.75",
     "@langchain/openai": "^0.6.11",
     "@types/react-syntax-highlighter": "^15.5.13",
