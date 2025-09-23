@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -12,7 +13,6 @@ interface EnhancedMarkdownRendererProps {
 }
 
 export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   // 检测代码块并添加复制按钮
   const renderCodeBlock = (props: any) => {
@@ -24,7 +24,7 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
     return (
       <div className="relative group">
         <SyntaxHighlighter
-          style={tomorrow as any}
+          style={tomorrow}
           language={language}
           PreTag="div"
           className="rounded-md"
@@ -91,14 +91,14 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
               <ReactMarkdown
                 components={{
                   code: renderCodeBlock,
-                  h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-4 mb-3 text-text-primary" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-4 mb-2 text-text-primary" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-3 mb-2 text-text-primary" {...props} />,
-                  p: ({ node, ...props }) => <p className="mb-2 leading-relaxed text-text-primary" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 ml-4 space-y-1" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 ml-4 space-y-1" {...props} />,
-                  li: ({ node, ...props }) => <li className="text-text-primary" {...props} />,
-                  a: ({ node, ...props }: any) => (
+                  h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-4 mb-3 text-text-primary" {...props} />,
+                  h2: ({ ...props }) => <h2 className="text-xl font-semibold mt-4 mb-2 text-text-primary" {...props} />,
+                  h3: ({ ...props }) => <h3 className="text-lg font-semibold mt-3 mb-2 text-text-primary" {...props} />,
+                  p: ({ ...props }) => <p className="mb-2 leading-relaxed text-text-primary" {...props} />,
+                  ul: ({ ...props }) => <ul className="list-disc list-inside mb-2 ml-4 space-y-1" {...props} />,
+                  ol: ({ ...props }) => <ol className="list-decimal list-inside mb-2 ml-4 space-y-1" {...props} />,
+                  li: ({ ...props }) => <li className="text-text-primary" {...props} />,
+                  a: ({ ...props }: any) => (
                     <a 
                       className="text-accent hover:text-accent hover:underline inline-flex items-center gap-1" 
                       target="_blank" 
@@ -111,25 +111,25 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
                       </svg>
                     </a>
                   ),
-                  blockquote: ({ node, ...props }) => (
+                  blockquote: ({ ...props }) => (
                     <blockquote className="border-l-4 border-accent pl-4 italic text-text-secondary my-4 bg-bg-tertiary py-2 rounded-r" {...props} />
                   ),
-                  table: ({ node, ...props }) => (
+                  table: ({ ...props }) => (
                     <div className="overflow-x-auto my-4">
                       <table className="min-w-full divide-y divide-border-default border border-border-default rounded-lg" {...props} />
                     </div>
                   ),
-                  thead: ({ node, ...props }) => <thead className="bg-bg-secondary" {...props} />,
-                  th: ({ node, ...props }) => (
+                  thead: ({ ...props }) => <thead className="bg-bg-secondary" {...props} />,
+                  th: ({ ...props }) => (
                     <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider" {...props} />
                   ),
-                  tbody: ({ node, ...props }) => <tbody className="bg-bg-primary divide-y divide-border-default" {...props} />,
-                  td: ({ node, ...props }) => (
+                  tbody: ({ ...props }) => <tbody className="bg-bg-primary divide-y divide-border-default" {...props} />,
+                  td: ({ ...props }) => (
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-text-primary" {...props} />
                   ),
-                  hr: ({ node, ...props }) => <hr className="my-6 border-border-default" {...props} />,
-                  strong: ({ node, ...props }) => <strong className="font-semibold text-text-primary" {...props} />,
-                  em: ({ node, ...props }) => <em className="italic text-text-secondary" {...props} />,
+                  hr: ({ ...props }) => <hr className="my-6 border-border-default" {...props} />,
+                  strong: ({ ...props }) => <strong className="font-semibold text-text-primary" {...props} />,
+                  em: ({ ...props }) => <em className="italic text-text-secondary" {...props} />,
                 }}
               >
                 {section.content}
@@ -141,7 +141,7 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
             <ReactMarkdown
               key={index}
               components={{
-                code({ node, className, children, ...props }: any) {
+                code({ className, children, ...props }: any) {
                   const match = /language-(\w+)/.exec(className || '');
                   const isInline = !match;
                   
@@ -156,7 +156,7 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
                   return (
                     <div className="relative group">
                       <SyntaxHighlighter
-                        style={tomorrow as any}
+                        style={tomorrow}
                         language={match[1]}
                         PreTag="div"
                         className="rounded-md"
@@ -168,15 +168,15 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
                     </div>
                   );
                 },
-                h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-text-primary" {...props} />,
-                h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-5 mb-3 text-text-primary" {...props} />,
-                h3: ({ node, ...props }) => <h3 className="text-xl font-semibold mt-4 mb-2 text-text-primary" {...props} />,
-                h4: ({ node, ...props }) => <h4 className="text-lg font-semibold mt-3 mb-2 text-text-primary" {...props} />,
-                p: ({ node, ...props }) => <p className="mb-3 leading-relaxed text-text-primary" {...props} />,
-                ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 ml-4 space-y-1" {...props} />,
-                ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 ml-4 space-y-1" {...props} />,
-                li: ({ node, ...props }) => <li className="text-text-primary" {...props} />,
-                a: ({ node, ...props }) => (
+                h1: ({ ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-text-primary" {...props} />,
+                h2: ({ ...props }) => <h2 className="text-2xl font-bold mt-5 mb-3 text-text-primary" {...props} />,
+                h3: ({ ...props }) => <h3 className="text-xl font-semibold mt-4 mb-2 text-text-primary" {...props} />,
+                h4: ({ ...props }) => <h4 className="text-lg font-semibold mt-3 mb-2 text-text-primary" {...props} />,
+                p: ({ ...props }) => <p className="mb-3 leading-relaxed text-text-primary" {...props} />,
+                ul: ({ ...props }) => <ul className="list-disc list-inside mb-3 ml-4 space-y-1" {...props} />,
+                ol: ({ ...props }) => <ol className="list-decimal list-inside mb-3 ml-4 space-y-1" {...props} />,
+                li: ({ ...props }) => <li className="text-text-primary" {...props} />,
+                a: ({ ...props }) => (
                   <a 
                     className="text-accent hover:text-accent hover:underline inline-flex items-center gap-1" 
                     target="_blank" 
@@ -189,25 +189,25 @@ export function EnhancedMarkdownRenderer({ content }: EnhancedMarkdownRendererPr
                     </svg>
                   </a>
                 ),
-                blockquote: ({ node, ...props }) => (
+                blockquote: ({ ...props }) => (
                   <blockquote className="border-l-4 border-accent pl-4 italic text-text-secondary my-4 bg-bg-tertiary py-2 rounded-r" {...props} />
                 ),
-                table: ({ node, ...props }) => (
+                table: ({ ...props }) => (
                   <div className="overflow-x-auto my-4">
                     <table className="min-w-full divide-y divide-border-default border border-border-default rounded-lg" {...props} />
                   </div>
                 ),
-                thead: ({ node, ...props }) => <thead className="bg-bg-secondary" {...props} />,
-                th: ({ node, ...props }) => (
+                thead: ({ ...props }) => <thead className="bg-bg-secondary" {...props} />,
+                th: ({ ...props }) => (
                   <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider" {...props} />
                 ),
-                tbody: ({ node, ...props }) => <tbody className="bg-bg-primary divide-y divide-border-default" {...props} />,
-                td: ({ node, ...props }) => (
+                tbody: ({ ...props }) => <tbody className="bg-bg-primary divide-y divide-border-default" {...props} />,
+                td: ({ ...props }) => (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-text-primary" {...props} />
                 ),
-                hr: ({ node, ...props }) => <hr className="my-6 border-border-default" {...props} />,
-                strong: ({ node, ...props }) => <strong className="font-semibold text-text-primary" {...props} />,
-                em: ({ node, ...props }) => <em className="italic text-text-secondary" {...props} />,
+                hr: ({ ...props }) => <hr className="my-6 border-border-default" {...props} />,
+                strong: ({ ...props }) => <strong className="font-semibold text-text-primary" {...props} />,
+                em: ({ ...props }) => <em className="italic text-text-secondary" {...props} />,
               }}
             >
               {section.content}

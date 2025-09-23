@@ -28,9 +28,7 @@ export function ChatWindow({
         error,
         connectionStatus,
         retry,
-        retryCount,
-        clearMessages,
-        metrics
+        retryCount
       } = useChat({
     apiUrl,
     onError: (error) => {
@@ -132,8 +130,8 @@ export function ChatWindow({
                   开始对话，获得智能回答
                 </p>
                 <div className="space-y-2 text-base text-text-tertiary">
-                  <p>💡 尝试问："解释React Hooks的工作原理"</p>
-                  <p>💡 或者："写一个Python函数来计算斐波那契数列"</p>
+                  <p>💡 尝试问：&quot;解释React Hooks的工作原理&quot;</p>
+                  <p>💡 或者：&quot;写一个Python函数来计算斐波那契数列&quot;</p>
                 </div>
               </div>
             </div>

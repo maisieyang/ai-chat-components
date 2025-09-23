@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { AIMessageChunk } from "@langchain/core/messages";
 
 export const runtime = "edge";
 
@@ -155,8 +154,8 @@ export async function POST(req: NextRequest) {
           for await (const chunk of stream) {
             // 处理LangChain的AIMessageChunk
             let content = '';
-            if (chunk && typeof chunk === 'object' && (chunk as any).content) {
-              content = (chunk as any).content;
+            if (chunk && typeof chunk === 'object' && 'content' in chunk) {
+              content = (chunk as { content: string }).content;
             } else if (typeof chunk === 'string') {
               content = chunk;
             }

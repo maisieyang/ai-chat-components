@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ChatMessage } from '../components/ChatWindow/types';
 
 // SSE事件类型
@@ -100,7 +100,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let aiMessage: ChatMessage = {
+    const aiMessage: ChatMessage = {
       role: 'assistant',
       content: '',
       timestamp: new Date(),
@@ -111,7 +111,6 @@ export function useChat(options: UseChatOptions): UseChatReturn {
     updateConnectionStatus(ConnectionStatus.CONNECTED);
 
     const startTime = Date.now();
-    let messageCount = 0;
 
     try {
       while (true) {
@@ -142,7 +141,6 @@ export function useChat(options: UseChatOptions): UseChatReturn {
 
                 case SSEEventType.CONTENT:
                   // 处理内容块
-                  messageCount++;
                   aiMessage.content += sseMessage.data;
                   
                   setMessages(prev => {
