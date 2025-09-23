@@ -21,47 +21,55 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
   };
 
   return (
-    <div 
-      className={`mb-6 max-w-[90%] ${
-        message.role === 'user' 
-          ? 'ml-auto' 
-          : 'mr-auto'
-      } ${className}`}
-    >
+    <div className={`w-full ${className}`}>
       {message.role === 'user' ? (
-        // 用户消息 - ChatGPT风格，更自然
-        <div className="bg-bg-tertiary text-text-primary p-4 rounded-2xl rounded-br-md">
-          <div className="text-base whitespace-pre-wrap leading-relaxed">
-            {message.content}
-          </div>
-          {message.timestamp && (
-            <div className="text-sm mt-2 text-text-tertiary opacity-80">
-              {formatTime(message.timestamp)}
+        // 用户消息 - ChatGPT风格布局
+        <div className="flex justify-end mb-6">
+          <div className="max-w-[85%] lg:max-w-[70%]">
+            <div className="bg-bg-tertiary text-text-primary px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
+              <div className="text-base whitespace-pre-wrap leading-relaxed">
+                {message.content}
+              </div>
             </div>
-          )}
+            {message.timestamp && (
+              <div className="text-xs text-text-tertiary mt-1 text-right opacity-70">
+                {formatTime(message.timestamp)}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
-        // AI消息 - 无边框，更自然的文档阅读体验
-        <div className="group">
-          <div className="prose prose-lg max-w-none dark:prose-invert text-base leading-relaxed">
-            <EnhancedMarkdownRenderer content={message.content} />
-          </div>
-          
-          {/* 消息操作栏 - 始终显示，但降低透明度 */}
-          <div className="flex items-center justify-between mt-3 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
-            <div className="flex items-center space-x-2">
-              {message.timestamp && (
-                <span className="text-sm text-text-tertiary bg-bg-tertiary px-2 py-1 rounded-md">
-                  {formatTime(message.timestamp)}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <MessageFeedback 
-                messageId={message.timestamp?.getTime().toString() || 'unknown'}
-                onFeedback={onFeedback}
-              />
+        // AI消息 - ChatGPT风格布局
+        <div className="flex justify-start mb-6">
+          <div className="max-w-[85%] lg:max-w-[70%]">
+            {/* AI头像 */}
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-bg-tertiary rounded-full flex items-center justify-center">
+                <span className="text-sm">🤖</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="prose prose-lg max-w-none text-base leading-relaxed">
+                  <EnhancedMarkdownRenderer content={message.content} />
+                </div>
+                
+                {/* 消息操作栏 */}
+                <div className="flex items-center justify-between mt-3 opacity-60 hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex items-center space-x-2">
+                    {message.timestamp && (
+                      <span className="text-xs text-text-tertiary">
+                        {formatTime(message.timestamp)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <MessageFeedback 
+                      messageId={message.timestamp?.getTime().toString() || 'unknown'}
+                      onFeedback={onFeedback}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

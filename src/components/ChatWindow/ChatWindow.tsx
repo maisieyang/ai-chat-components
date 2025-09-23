@@ -119,7 +119,7 @@ export function ChatWindow({
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto px-4">
               {messages.map((message, index) => (
                 <MessageBubble
                   key={index}
@@ -128,10 +128,17 @@ export function ChatWindow({
                 />
               ))}
               {isLoading && (
-                <div className="mb-6 max-w-[90%] mr-auto">
-                  <div className="flex items-center text-base text-text-tertiary">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent mr-3"></div>
-                    AI正在思考中...
+                <div className="flex justify-start mb-6">
+                  <div className="max-w-[85%] lg:max-w-[70%]">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-bg-tertiary rounded-full flex items-center justify-center">
+                        <span className="text-sm">🤖</span>
+                      </div>
+                      <div className="flex items-center text-base text-text-tertiary">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent mr-3"></div>
+                        AI正在思考中...
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

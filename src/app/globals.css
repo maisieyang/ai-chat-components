@@ -1,82 +1,109 @@
 @import "tailwindcss";
 
-/* ===== 主题系统设计 ===== */
+/* ===== 专业CSS架构设计 ===== */
 
-/* 浅色主题变量 */
+/* 设计令牌系统 - 基于现代设计系统最佳实践 */
 :root {
-  /* 基础颜色 */
+  /* 基础颜色系统 */
   --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f9fafb;
-  --color-bg-tertiary: #f3f4f6;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
   --color-bg-elevated: #ffffff;
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
   
-  /* 文字颜色 */
-  --color-text-primary: #111827;
-  --color-text-secondary: #4b5563;
-  --color-text-tertiary: #6b7280;
+  /* 文字颜色系统 */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748b;
   --color-text-inverted: #ffffff;
+  --color-text-disabled: #94a3b8;
   
-  /* 边框颜色 */
-  --color-border-default: #e5e7eb;
-  --color-border-light: #f3f4f6;
-  --color-border-heavy: #d1d5db;
+  /* 边框颜色系统 */
+  --color-border-default: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-border-heavy: #cbd5e1;
+  --color-border-focus: #3b82f6;
   
-  /* 交互颜色 */
-  --color-interactive-primary: #111827;
-  --color-interactive-primary-hover: #1f2937;
-  --color-interactive-secondary: #f3f4f6;
-  --color-interactive-secondary-hover: #e5e7eb;
+  /* 交互颜色系统 */
+  --color-interactive-primary: #0f172a;
+  --color-interactive-primary-hover: #1e293b;
+  --color-interactive-primary-active: #334155;
+  --color-interactive-secondary: #f1f5f9;
+  --color-interactive-secondary-hover: #e2e8f0;
   
-  /* 状态颜色 */
+  /* 状态颜色系统 */
   --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   
-  /* 阴影 */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  /* 阴影系统 */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   
-  /* 圆角 */
+  /* 间距系统 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* 圆角系统 */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* 动画系统 */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 200ms ease-in-out;
+  --transition-slow: 300ms ease-in-out;
 }
 
-/* 暗黑主题变量 */
+/* 暗黑主题变量 - 基于现代暗黑模式最佳实践 */
 .dark {
-  /* 基础颜色 */
-  --color-bg-primary: #0f0f0f;
-  --color-bg-secondary: #1a1a1a;
-  --color-bg-tertiary: #262626;
-  --color-bg-elevated: #1a1a1a;
+  /* 基础颜色系统 */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+  --color-bg-elevated: #1e293b;
+  --color-bg-overlay: rgba(0, 0, 0, 0.8);
   
-  /* 文字颜色 */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #e5e5e5;
-  --color-text-tertiary: #a3a3a3;
-  --color-text-inverted: #0f0f0f;
+  /* 文字颜色系统 */
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-text-inverted: #0f172a;
+  --color-text-disabled: #64748b;
   
-  /* 边框颜色 */
-  --color-border-default: #404040;
-  --color-border-light: #262626;
-  --color-border-heavy: #525252;
+  /* 边框颜色系统 */
+  --color-border-default: #334155;
+  --color-border-light: #475569;
+  --color-border-heavy: #64748b;
+  --color-border-focus: #3b82f6;
   
-  /* 交互颜色 */
-  --color-interactive-primary: #ffffff;
-  --color-interactive-primary-hover: #e5e5e5;
-  --color-interactive-secondary: #262626;
-  --color-interactive-secondary-hover: #404040;
+  /* 交互颜色系统 */
+  --color-interactive-primary: #f8fafc;
+  --color-interactive-primary-hover: #e2e8f0;
+  --color-interactive-primary-active: #cbd5e1;
+  --color-interactive-secondary: #334155;
+  --color-interactive-secondary-hover: #475569;
   
-  /* 状态颜色 */
-  --color-accent: #3b82f6;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  /* 状态颜色系统 */
+  --color-accent: #60a5fa;
+  --color-accent-hover: #3b82f6;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
   
-  /* 阴影 */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  /* 阴影系统 */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
 }
 
 /* 系统主题支持 */
@@ -113,10 +140,51 @@ html.dark {
   color-scheme: dark;
 }
 
+/* ===== 性能优化和可访问性 ===== */
+
 body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 性能优化 */
+* {
+  box-sizing: border-box;
+}
+
+/* 可访问性改进 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 焦点样式 */
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border-default: #000000;
+    --color-text-tertiary: #000000;
+  }
+  
+  .dark {
+    --color-border-default: #ffffff;
+    --color-text-tertiary: #ffffff;
+  }
 }
 
 /* ===== Tailwind CSS 集成 ===== */
