@@ -9,27 +9,39 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // 自定义颜色，支持暗黑模式
-        'chat-bg': {
-          light: '#ffffff',
-          dark: '#0f0f0f',
-        },
-        'chat-surface': {
-          light: '#f8f9fa',
-          dark: '#1a1a1a',
-        },
-        'chat-border': {
-          light: '#e5e7eb',
-          dark: '#374151',
-        },
-        'chat-text': {
-          light: '#111827',
-          dark: '#f9fafb',
-        },
-        'chat-text-secondary': {
-          light: '#6b7280',
-          dark: '#9ca3af',
-        },
+        // 使用CSS变量的主题颜色
+        'bg-primary': 'var(--color-bg-primary)',
+        'bg-secondary': 'var(--color-bg-secondary)',
+        'bg-tertiary': 'var(--color-bg-tertiary)',
+        'bg-elevated': 'var(--color-bg-elevated)',
+        
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-tertiary': 'var(--color-text-tertiary)',
+        'text-inverted': 'var(--color-text-inverted)',
+        
+        'border-default': 'var(--color-border-default)',
+        'border-light': 'var(--color-border-light)',
+        'border-heavy': 'var(--color-border-heavy)',
+        
+        'interactive-primary': 'var(--color-interactive-primary)',
+        'interactive-primary-hover': 'var(--color-interactive-primary-hover)',
+        'interactive-secondary': 'var(--color-interactive-secondary)',
+        'interactive-secondary-hover': 'var(--color-interactive-secondary-hover)',
+        
+        'accent': 'var(--color-accent)',
+        'success': 'var(--color-success)',
+        'warning': 'var(--color-warning)',
+        'error': 'var(--color-error)',
+      },
+      boxShadow: {
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+      },
+      borderRadius: {
+        'sm': 'var(--radius-sm)',
+        'md': 'var(--radius-md)',
+        'lg': 'var(--radius-lg)',
       },
     },
   },

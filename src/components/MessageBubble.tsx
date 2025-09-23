@@ -30,12 +30,12 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
     >
       {message.role === 'user' ? (
         // 用户消息 - ChatGPT风格，更自然
-        <div className="bg-gray-100 dark:bg-[var(--bg-tertiary)] text-gray-900 dark:text-[var(--text-primary)] p-4 rounded-2xl rounded-br-md">
+        <div className="bg-bg-tertiary text-text-primary p-4 rounded-2xl rounded-br-md">
           <div className="text-base whitespace-pre-wrap leading-relaxed">
             {message.content}
           </div>
           {message.timestamp && (
-            <div className="text-sm mt-2 text-gray-500 dark:text-[var(--text-tertiary)] opacity-80">
+            <div className="text-sm mt-2 text-text-tertiary opacity-80">
               {formatTime(message.timestamp)}
             </div>
           )}
@@ -51,7 +51,7 @@ export function MessageBubble({ message, className = '', onFeedback }: MessageBu
           <div className="flex items-center justify-between mt-3 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
             <div className="flex items-center space-x-2">
               {message.timestamp && (
-                <span className="text-sm text-gray-500 dark:text-[var(--text-tertiary)] bg-white dark:bg-[var(--bg-tertiary)] px-2 py-1 rounded-md">
+                <span className="text-sm text-text-tertiary bg-bg-tertiary px-2 py-1 rounded-md">
                   {formatTime(message.timestamp)}
                 </span>
               )}

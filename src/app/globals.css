@@ -1,234 +1,125 @@
 @import "tailwindcss";
 
-/* 基础样式 */
+/* ===== 主题系统设计 ===== */
+
+/* 浅色主题变量 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --chat-bg: #ffffff;
-  --chat-surface: #f8f9fa;
-  --chat-border: #e5e7eb;
-  --chat-text: #111827;
-  --chat-text-secondary: #6b7280;
-}
-
-/* 暗黑模式 - 使用ChatGPT官方配色 */
-.dark {
-  --background: #212121;
-  --foreground: #fff;
-  --chat-bg: #212121;
-  --chat-surface: #303030;
-  --chat-border: #ffffff26;
-  --chat-text: #fff;
-  --chat-text-secondary: #f3f3f3;
+  /* 基础颜色 */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-bg-elevated: #ffffff;
   
-  /* ChatGPT官方配色变量 */
-  --bg-primary: #212121;
-  --bg-primary-inverted: #fff;
-  --bg-secondary: #303030;
-  --bg-tertiary: #414141;
-  --bg-scrim: #0d0d0d80;
-  --bg-elevated-primary: #303030;
-  --bg-elevated-secondary: #181818;
-  --bg-status-warning: #4a2206;
-  --bg-status-error: #4d100e;
-  --border-default: #ffffff26;
-  --border-heavy: #fff3;
-  --border-light: #ffffff0d;
-  --border-status-warning: #4a2206;
-  --border-status-error: #4d100e;
-  --text-primary: #fff;
-  --text-secondary: #f3f3f3;
-  --text-tertiary: #afafaf;
-  --text-inverted: #0d0d0d;
-  --text-inverted-static: #fff;
-  --text-accent: #66b5ff;
-  --text-status-warning: #ff9e6c;
-  --text-status-error: #ff8583;
-  --icon-primary: #e8e8e8;
-  --icon-secondary: #cdcdcd;
-  --icon-tertiary: #afafaf;
-  --icon-inverted: #0d0d0d;
-  --icon-inverted-static: #fff;
-  --icon-accent: #66b5ff;
-  --icon-status-warning: #ff9e6c;
-  --icon-status-error: #ff8583;
-  --interactive-bg-primary-default: #fff;
-  --interactive-bg-primary-hover: #fffc;
-  --interactive-bg-primary-press: #ffffffe5;
-  --interactive-bg-primary-inactive: #fff;
-  --interactive-bg-primary-selected: #fff;
-  --interactive-bg-secondary-default: #fff0;
-  --interactive-bg-secondary-hover: #ffffff1a;
-  --interactive-bg-secondary-press: #ffffff0d;
-  --interactive-bg-secondary-inactive: #fff0;
-  --interactive-bg-secondary-selected: #ffffff1a;
-  --interactive-bg-tertiary-default: #212121;
-  --interactive-bg-tertiary-hover: #181818;
-  --interactive-bg-tertiary-press: #0d0d0d;
-  --interactive-bg-tertiary-inactive: #212121;
-  --interactive-bg-tertiary-selected: #212121;
-  --interactive-bg-accent-default: #013566;
-  --interactive-bg-accent-hover: #003f7a;
-  --interactive-bg-accent-muted-hover: #394a5b;
-  --interactive-bg-accent-muted-context: #394a5b80;
-  --interactive-bg-accent-press: #004f99;
+  /* 文字颜色 */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #6b7280;
+  --color-text-inverted: #ffffff;
+  
+  /* 边框颜色 */
+  --color-border-default: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-border-heavy: #d1d5db;
+  
+  /* 交互颜色 */
+  --color-interactive-primary: #111827;
+  --color-interactive-primary-hover: #1f2937;
+  --color-interactive-secondary: #f3f4f6;
+  --color-interactive-secondary-hover: #e5e7eb;
+  
+  /* 状态颜色 */
+  --color-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  
+  /* 圆角 */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 }
 
-/* 确保暗黑模式类正确应用 */
+/* 暗黑主题变量 */
+.dark {
+  /* 基础颜色 */
+  --color-bg-primary: #0f0f0f;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-tertiary: #262626;
+  --color-bg-elevated: #1a1a1a;
+  
+  /* 文字颜色 */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #e5e5e5;
+  --color-text-tertiary: #a3a3a3;
+  --color-text-inverted: #0f0f0f;
+  
+  /* 边框颜色 */
+  --color-border-default: #404040;
+  --color-border-light: #262626;
+  --color-border-heavy: #525252;
+  
+  /* 交互颜色 */
+  --color-interactive-primary: #ffffff;
+  --color-interactive-primary-hover: #e5e5e5;
+  --color-interactive-secondary: #262626;
+  --color-interactive-secondary-hover: #404040;
+  
+  /* 状态颜色 */
+  --color-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+}
+
+/* 系统主题支持 */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-bg-primary: #0f0f0f;
+    --color-bg-secondary: #1a1a1a;
+    --color-bg-tertiary: #262626;
+    --color-bg-elevated: #1a1a1a;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #e5e5e5;
+    --color-text-tertiary: #a3a3a3;
+    --color-text-inverted: #0f0f0f;
+    --color-border-default: #404040;
+    --color-border-light: #262626;
+    --color-border-heavy: #525252;
+    --color-interactive-primary: #ffffff;
+    --color-interactive-primary-hover: #e5e5e5;
+    --color-interactive-secondary: #262626;
+    --color-interactive-secondary-hover: #404040;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* ===== 基础样式重置 ===== */
+
+/* 全局基础样式 */
+html {
+  color-scheme: light;
+}
+
 html.dark {
   color-scheme: dark;
 }
 
-html.light {
-  color-scheme: light;
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* 强制暗黑模式样式 - 使用ChatGPT配色 */
-.dark {
-  background-color: var(--bg-primary) !important;
-  color: var(--text-primary) !important;
-}
-
-/* 背景色 - ChatGPT配色 */
-.dark .bg-white {
-  background-color: var(--bg-secondary) !important;
-}
-
-.dark .bg-gray-50 {
-  background-color: var(--bg-tertiary) !important;
-}
-
-.dark .bg-gray-100 {
-  background-color: var(--bg-tertiary) !important;
-}
-
-.dark .bg-gray-200 {
-  background-color: var(--bg-elevated-primary) !important;
-}
-
-.dark .bg-gray-800 {
-  background-color: var(--bg-elevated-secondary) !important;
-}
-
-.dark .bg-gray-900 {
-  background-color: var(--bg-primary) !important;
-}
-
-/* 文字颜色 - ChatGPT配色 */
-.dark .text-gray-900 {
-  color: var(--text-primary) !important;
-}
-
-.dark .text-gray-800 {
-  color: var(--text-primary) !important;
-}
-
-.dark .text-gray-700 {
-  color: var(--text-secondary) !important;
-}
-
-.dark .text-gray-600 {
-  color: var(--text-secondary) !important;
-}
-
-.dark .text-gray-500 {
-  color: var(--text-tertiary) !important;
-}
-
-.dark .text-gray-400 {
-  color: var(--text-tertiary) !important;
-}
-
-.dark .text-gray-300 {
-  color: var(--text-tertiary) !important;
-}
-
-/* 边框颜色 - ChatGPT配色 */
-.dark .border-gray-200 {
-  border-color: var(--border-default) !important;
-}
-
-.dark .border-gray-300 {
-  border-color: var(--border-heavy) !important;
-}
-
-.dark .border-gray-100 {
-  border-color: var(--border-light) !important;
-}
-
-.dark .border-gray-600 {
-  border-color: var(--border-default) !important;
-}
-
-.dark .border-gray-700 {
-  border-color: var(--border-heavy) !important;
-}
-
-/* 特殊元素 - ChatGPT配色 */
-.dark .text-blue-100 {
-  color: var(--text-accent) !important;
-}
-
-.dark .text-blue-200 {
-  color: var(--text-accent) !important;
-}
-
-.dark .text-blue-500 {
-  color: var(--text-accent) !important;
-}
-
-.dark .text-blue-600 {
-  color: var(--text-accent) !important;
-}
-
-/* 引用块暗黑模式样式 - ChatGPT配色 */
-.dark blockquote {
-  background-color: var(--bg-tertiary) !important;
-  border-left-color: var(--text-accent) !important;
-  color: var(--text-secondary) !important;
-}
-
-.dark .bg-blue-50 {
-  background-color: var(--bg-tertiary) !important;
-  color: var(--text-secondary) !important;
-}
-
-/* 交互元素 - ChatGPT配色 */
-.dark .hover\:bg-gray-100:hover {
-  background-color: var(--interactive-bg-secondary-hover) !important;
-}
-
-.dark .hover\:bg-gray-200:hover {
-  background-color: var(--interactive-bg-secondary-hover) !important;
-}
-
-.dark .hover\:bg-gray-600:hover {
-  background-color: var(--interactive-bg-tertiary-hover) !important;
-}
-
-.dark .hover\:bg-gray-800:hover {
-  background-color: var(--interactive-bg-tertiary-hover) !important;
-}
-
-/* 确保所有文字在暗黑模式下可见 */
-.dark * {
-  color: inherit;
-}
-
-.dark .text-black {
-  color: var(--text-primary) !important;
-}
-
-.dark .text-white {
-  color: var(--text-primary) !important;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ===== Tailwind CSS 集成 ===== */
 
 body {
   background: var(--background);

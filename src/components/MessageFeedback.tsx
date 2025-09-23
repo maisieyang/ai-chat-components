@@ -20,10 +20,10 @@ export function MessageFeedback({ messageId, onFeedback, className = '' }: Messa
     <div className={`flex items-center space-x-2 ${className}`}>
       <button
         onClick={() => handleFeedback('like')}
-        className={`p-2 rounded-md transition-colors duration-200 bg-white dark:bg-[var(--bg-tertiary)] shadow-sm ${
+        className={`p-2 rounded-md transition-colors duration-200 bg-bg-tertiary shadow-sm ${
           feedback === 'like'
-            ? 'text-green-600 bg-green-50 dark:bg-green-900/20'
-            : 'text-gray-400 dark:text-[var(--icon-tertiary)] hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+            ? 'text-success bg-green-50 dark:bg-green-900/20'
+            : 'text-text-tertiary hover:text-success hover:bg-green-50 dark:hover:bg-green-900/20'
         }`}
         title="有用"
       >
@@ -34,10 +34,10 @@ export function MessageFeedback({ messageId, onFeedback, className = '' }: Messa
       
       <button
         onClick={() => handleFeedback('dislike')}
-        className={`p-2 rounded-md transition-colors duration-200 bg-white dark:bg-[var(--bg-tertiary)] shadow-sm ${
+        className={`p-2 rounded-md transition-colors duration-200 bg-bg-tertiary shadow-sm ${
           feedback === 'dislike'
-            ? 'text-red-600 bg-red-50 dark:bg-red-900/20'
-            : 'text-gray-400 dark:text-[var(--icon-tertiary)] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
+            ? 'text-error bg-red-50 dark:bg-red-900/20'
+            : 'text-text-tertiary hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20'
         }`}
         title="无用"
       >
