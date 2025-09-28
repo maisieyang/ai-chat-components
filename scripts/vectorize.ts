@@ -1,5 +1,13 @@
-import 'dotenv/config';
+import { config as loadEnv } from 'dotenv';
+import { File as NodeFile } from 'node:buffer';
 import { buildKnowledgeBase } from '../src/lib/pipeline/build';
+
+loadEnv();
+loadEnv({ path: '.env.local', override: true });
+
+if (typeof (globalThis as { File?: unknown }).File === 'undefined' && typeof NodeFile !== 'undefined') {
+  (globalThis as { File?: typeof NodeFile }).File = NodeFile;
+}
 
 const REQUIRED_ENV_VARS = [
   'OPENAI_API_KEY',

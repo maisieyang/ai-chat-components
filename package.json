@@ -19,6 +19,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^5.0.41",
     "cheerio": "^1.1.2",
+    "dotenv": "^17.2.2",
     "langchain": "^0.3.33",
     "next": "15.5.3",
     "openai": "^5.20.1",

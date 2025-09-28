@@ -11,8 +11,13 @@ interface FetchResult {
   rawResponses: ConfluenceSearchResponse[];
 }
 
+function sanitizeBaseUrl(value: string) {
+  return value.replace(/#.*$/, '').replace(/\/+$/, '');
+}
+
 function getBaseUrl() {
-  return process.env.CONFLUENCE_BASE_URL?.replace(/\/$/, '') ?? DEFAULT_BASE_URL;
+  const raw = process.env.CONFLUENCE_BASE_URL ?? DEFAULT_BASE_URL;
+  return sanitizeBaseUrl(raw);
 }
 
 function buildRequestUrl(
