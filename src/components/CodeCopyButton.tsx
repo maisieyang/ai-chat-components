@@ -23,11 +23,15 @@ export function CodeCopyButton({ code, className = '' }: CodeCopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className={`absolute top-2 right-2 p-2 rounded-md bg-bg-elevated hover:bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors duration-200 ${className}`}
+      className={`opacity-0 group-hover:opacity-100 transition-all duration-200 p-2 rounded-lg hover:scale-105 active:scale-95 ${className}`}
+      style={{
+        backgroundColor: 'var(--main-surface-elevated)',
+        color: 'var(--text-secondary)',
+      }}
       title={copied ? '已复制!' : '复制代码'}
     >
       {copied ? (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       ) : (

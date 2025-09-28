@@ -1,42 +1,159 @@
 @import "tailwindcss";
 
-/* ===== 专业CSS架构设计 ===== */
+/* ===== ChatGPT风格主题系统 ===== */
 
-/* 设计令牌系统 - 基于现代设计系统最佳实践 */
+/* ChatGPT主题颜色变量 */
 :root {
-  /* 基础颜色系统 */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-tertiary: #f1f5f9;
-  --color-bg-elevated: #ffffff;
-  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  /* Default主题 - 浅色模式 */
+  --default-theme-user-msg-bg: var(--message-surface);
+  --default-theme-user-msg-text: var(--text-primary);
+  --default-theme-submit-btn-bg: #000;
+  --default-theme-submit-btn-text: #fff;
+  --default-theme-secondary-btn-bg: #ececec;
+  --default-theme-secondary-btn-text: var(--text-primary);
+  --default-theme-user-selection-bg: oklab(68.2034% -.0561513 -.164103/.35);
+  --default-theme-attribution-highlight-bg: #ffeeb8;
+  --default-theme-entity-accent: #0169cc;
   
-  /* 文字颜色系统 */
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #64748b;
-  --color-text-inverted: #ffffff;
-  --color-text-disabled: #94a3b8;
+  /* 代码块颜色 */
+  --code-bg: #f8f9fa;
+  --code-border: #e9ecef;
+  --code-text: #24292e;
   
-  /* 边框颜色系统 */
-  --color-border-default: #e2e8f0;
-  --color-border-light: #f1f5f9;
-  --color-border-heavy: #cbd5e1;
-  --color-border-focus: #3b82f6;
+  /* Callout颜色 */
+  --callout-info-bg: #dbeafe;
+  --callout-info-border: #3b82f6;
+  --callout-warning-bg: #fef3c7;
+  --callout-warning-border: #f59e0b;
+  --callout-success-bg: #d1fae5;
+  --callout-success-border: #10b981;
+  --callout-error-bg: #fee2e2;
+  --callout-error-border: #ef4444;
   
-  /* 交互颜色系统 */
-  --color-interactive-primary: #0f172a;
-  --color-interactive-primary-hover: #1e293b;
-  --color-interactive-primary-active: #334155;
-  --color-interactive-secondary: #f1f5f9;
-  --color-interactive-secondary-hover: #e2e8f0;
+  /* 基础颜色系统 - ChatGPT风格 */
+  --main-surface-background: #fffffff2;
+  --message-surface: #e9e9e980;
+  --composer-surface: var(--message-surface);
+  --composer-blue-bg: #daeeff;
+  --composer-blue-hover: #bddcf4;
+  --composer-blue-hover-tint: #0084ff24;
+  --composer-surface-primary: var(--main-surface-primary);
+  --dot-color: var(--black);
+  --text-primary: var(--gray-950);
+  --icon-surface: 13 13 13;
+  --text-primary-inverse: var(--gray-100);
+  --content-primary: #01172b;
+  --content-secondary: #44505b;
+  --text-secondary: #0009;
+  --text-tertiary: #0000004a;
+  --text-quaternary: #00000030;
+  --text-placeholder: #000000b3;
+  --tag-blue: #08f;
+  --tag-blue-light: #0af;
+  --text-error: #f93a37;
+  --text-danger: var(--red-500);
+  --surface-error: 249 58 55;
+  --border-xlight: #0000000d;
+  --border-light: #0000001a;
+  --border-medium: #00000026;
+  --border-heavy: #0003;
+  --border-xheavy: #00000040;
+  --hint-text: #08f;
+  --hint-bg: #b3dbff;
+  --border-sharp: #0000000d;
+  --icon-secondary: #676767;
+  --main-surface-primary: var(--white);
+  --main-surface-primary-inverse: var(--gray-800);
+  --main-surface-secondary: var(--gray-50);
+  --main-surface-secondary-selected: #0000001a;
+  --main-surface-tertiary: var(--gray-100);
+  --sidebar-surface-primary: var(--gray-50);
+  --sidebar-surface-secondary: var(--gray-100);
+  --sidebar-surface-tertiary: var(--gray-200);
+  --sidebar-title-primary: #28282880;
+  --sidebar-surface: #fcfcfc;
+  --sidebar-body-primary: #0d0d0d;
+  --sidebar-icon: #7d7d7d;
+  --surface-hover: #00000012;
+  --link: #2964aa;
+  --link-hover: #749ac8;
+  --selection: #007aff;
+  --scrollbar-color: #0000001a;
+  --scrollbar-color-hover: #0003;
   
-  /* 状态颜色系统 */
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  /* 基础颜色定义 */
+  --white: #fff;
+  --black: #000;
+  --gray-50: #f9f9f9;
+  --gray-100: #ececec;
+  --gray-200: #e3e3e3;
+  --gray-300: #cdcdcd;
+  --gray-400: #b4b4b4;
+  --gray-500: #9b9b9b;
+  --gray-600: #676767;
+  --gray-700: #424242;
+  --gray-750: #2f2f2f;
+  --gray-800: #212121;
+  --gray-900: #171717;
+  --gray-950: #0d0d0d;
+  --red-500: #e02e2a;
+  --red-700: #911e1b;
+  --brand-purple: #ab68ff;
+  --yellow-900: #4d3b00;
+}
+
+/* 暗色模式主题 */
+.dark {
+  --main-surface-background: #212121e6;
+  --message-surface: #323232d9;
+  --composer-blue-bg: #2a4a6d;
+  --composer-blue-hover: #1a416a;
+  --composer-blue-text: #48aaff;
+  --composer-surface-primary: #303030;
+  --dot-color: var(--white);
+  --text-primary: var(--gray-100);
+  --icon-surface: 240 240 240;
+  --text-primary-inverse: var(--gray-950);
+  --text-secondary: #ffffffb3;
+  --text-tertiary: #ffffff94;
+  --text-quaternary: #ffffff69;
+  --text-placeholder: #fffc;
+  --content-primary: #f2f6fa;
+  --content-secondary: #dbe2e8;
+  --text-error: #f93a37;
+  --border-xlight: #ffffff0d;
+  --border-light: #ffffff1a;
+  --border-medium: #ffffff26;
+  --border-heavy: #fff3;
+  --border-xheavy: #ffffff40;
+  --border-sharp: #ffffff0d;
+  --main-surface-primary: var(--gray-800);
+  --main-surface-primary-inverse: var(--white);
+  --main-surface-secondary: var(--gray-750);
+  --main-surface-secondary-selected: #ffffff26;
+  --main-surface-tertiary: var(--gray-700);
+  --sidebar-surface-primary: var(--gray-900);
+  --sidebar-surface-secondary: var(--gray-800);
+  --sidebar-surface-tertiary: var(--gray-750);
+  --sidebar-title-primary: #f0f0f080;
+  --sidebar-surface: #2b2b2b;
+  --sidebar-body-primary: #ededed;
+  --sidebar-icon: #a4a4a4;
+  --surface-hover: #ffffff26;
+  --link: #7ab7ff;
+  --link-hover: #5e83b3;
+  --surface-error: 249 58 55;
+  --scrollbar-color: #ffffff1a;
+  --scrollbar-color-hover: #fff3;
+  
+  /* 暗色模式主题变量 */
+  --default-theme-submit-btn-bg: #fff;
+  --default-theme-submit-btn-text: #000;
+  --default-theme-secondary-btn-bg: #424242;
+  --default-theme-secondary-btn-text: #fff;
+  --default-theme-user-selection-bg: oklab(75.3343% -.0485353 -.1236/.4);
+  --default-theme-attribution-highlight-bg: #6e5400;
+  --default-theme-entity-accent: #339cff;
   
   /* 阴影系统 */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);

@@ -9,6 +9,7 @@ import { ErrorMessage } from '../ErrorMessage';
 import { ScrollToBottomButton } from '../ScrollToBottomButton';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { ThemeToggle } from '../ThemeToggle';
+import { SendButton } from '../SendButton';
 
 export function ChatWindow({ 
   apiUrl, 
@@ -145,21 +146,6 @@ export function ChatWindow({
                   isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
                 />
               ))}
-              {isLoading && (
-                <div className="flex justify-start mb-6">
-                  <div className="max-w-[85%] lg:max-w-[70%]">
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-bg-tertiary rounded-full flex items-center justify-center">
-                        <span className="text-sm">🤖</span>
-                      </div>
-                      <div className="flex items-center text-base text-text-tertiary">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent mr-3"></div>
-                        AI正在思考中...
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -196,13 +182,17 @@ export function ChatWindow({
                   }}
                 />
               </div>
-              <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="px-6 py-3 bg-interactive-primary text-text-inverted rounded-2xl hover:bg-interactive-primary-hover disabled:bg-bg-tertiary disabled:cursor-not-allowed transition-colors duration-200 font-medium text-base shadow-sm"
-              >
-                {isLoading ? '发送中...' : '发送'}
-              </button>
+              <SendButton
+                isLoading={isLoading}
+                disabled={!input.trim()}
+                onClick={() => {
+                  if (input.trim() && !isLoading) {
+                    const messageToSend = input.trim();
+                    setInput('');
+                    sendMessage(messageToSend);
+                  }
+                }}
+              />
             </div>
           </form>
         </div>

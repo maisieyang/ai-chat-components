@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ChatMessage } from '../components/ChatWindow/types';
-import { EnhancedMarkdownRenderer } from './EnhancedMarkdownRenderer';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { MessageFeedback } from './MessageFeedback';
 
 interface MessageBubbleProps {
@@ -50,7 +50,7 @@ export function MessageBubble({ message, className = '', onFeedback, isStreaming
               </div>
               <div className="flex-1 min-w-0">
                 <div className="prose prose-lg max-w-none text-base leading-relaxed">
-                  <EnhancedMarkdownRenderer content={message.content} />
+                  <MarkdownRenderer content={message.content} />
                   {isStreaming && (
                     <span className="inline-block w-2 h-4 bg-accent ml-1 animate-pulse" 
                           style={{ animationDuration: '1s' }}></span>

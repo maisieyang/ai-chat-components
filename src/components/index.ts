@@ -8,3 +8,7 @@ export { CollapsibleSection } from './CollapsibleSection';
 export { EnhancedMarkdownRenderer } from './EnhancedMarkdownRenderer';
 export { ThemeToggle } from './ThemeToggle';
 export { MessageFeedback } from './MessageFeedback';
+export { SendButton } from './SendButton';
+export { CalloutBox } from './CalloutBox';
+export { VisualSeparator } from './VisualSeparator';
+export { MarkdownRenderer } from './MarkdownRenderer';

@@ -66,35 +66,129 @@ const logPerformanceMetrics = (metrics: PerformanceMetrics, error?: Error) => {
   }));
 };
 
-const TEMPLATE = `你是一个技术写作助手。请根据用户的输入，生成一个清晰、结构化的技术回答，就像Cursor那样优雅。
+const TEMPLATE = `You are a technical writing assistant. Generate clear, well-structured technical responses using ChatGPT-style formatting.
 
-要求：
-1. 使用Markdown格式组织内容，结构清晰
-2. 使用 # ## ### 等标题层级来组织内容
-3. 代码块使用 \`\`\`语言 格式，确保语法高亮正确
-4. 表格使用标准Markdown表格语法
-5. 列表使用 - 或 1. 格式
-6. 引用使用 > 格式
-7. 内联代码使用 \`code\` 格式
-8. 提供完整的、可运行的代码示例
-9. 包含相关的引用和参考资料，使用外部链接图标
-10. 根据内容复杂度设置合适的难度级别
+## Formatting Requirements
 
-特别要求：
-- 对于代码相关内容，使用 "## 代码示例" 作为标题，这样可以被自动识别为可折叠区域
-- 提供多个代码示例时，每个示例都要有清晰的说明
-- 链接要包含描述性文本，不要只是URL
-- 使用表情符号来增强可读性（如 📝 代码示例，🔗 参考资料等）
+Use standard Markdown syntax with proper spacing:
 
-当前对话:
+- Headers: # Header, ## Subheader, ### Section
+- Lists: - Item or 1. Item (with space after marker)
+- Code: inline code and language blocks
+- Links: [text](url) with descriptive text
+- Tables: Standard Markdown table syntax
+
+## ChatGPT-Style Elements
+
+Include these visual elements for better readability:
+
+- **Emoji anchors**: Use 👉, ⚠️, ✅, 🔵, 📝, 🔗 for visual anchors
+- **Callout boxes**: Use > for important notes and warnings
+- **Visual separators**: Use --- between major sections
+- **Progressive disclosure**: Start with overview, then dive into details
+- **Interactive elements**: End with questions like "Would you like me to explain [specific aspect]?"
+
+## Response Structure
+
+Organize content with clear hierarchy:
+1. **Title + Background** → Set user expectations
+2. **Core content blocks** → Break down into digestible sections
+3. **Examples/Code** → Minimal runnable examples
+4. **Visual elements** → Use emojis and callouts for emphasis
+5. **Summary + Interaction** → Consolidate knowledge & guide next steps
+
+## Example Format
+
+# Main Topic
+
+Brief introduction with context.
+
+## Key Concepts
+
+👉 **Core Concept 1**: Brief explanation
+👉 **Core Concept 2**: Brief explanation
+
+### Implementation
+
+\`\`\`javascript
+// Minimal runnable example
+console.log('Hello World');
+\`\`\`
+
+> ⚠️ **Important**: Key takeaway or warning
+
+---
+
+## Summary
+
+✅ **Key Points**:
+- Point 1
+- Point 2
+
+🔗 **References**: [Documentation](https://example.com)
+
+Would you like me to dive deeper into [specific aspect]?
+
+---
+
+Chat History:
 {chat_history}
 
-用户输入: {input}
+User Input: {input}
 
-请直接输出Markdown格式的内容，不需要JSON包装：`;
+Provide a comprehensive technical response in ChatGPT-style Markdown format:`;
 
 export async function POST(req: NextRequest) {
   const metrics = createPerformanceMetrics();
+  const baseOrigins = ['https://intranet.bank.local'];
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+    : [];
+  const devOrigins = process.env.NODE_ENV !== 'production'
+    ? ['http://localhost:3000', 'http://127.0.0.1:3000']
+    : [];
+
+  const allowedOrigins = [...new Set([...baseOrigins, ...envOrigins, ...devOrigins])];
+
+  const origin = req.headers.get('origin');
+  const effectiveOrigin = origin && allowedOrigins.includes(origin)
+    ? origin
+    : allowedOrigins[0];
+
+  if (origin && !allowedOrigins.includes(origin)) {
+    return NextResponse.json(
+      { error: 'Origin not allowed.' },
+      {
+        status: 403,
+        headers: {
+          'Access-Control-Allow-Origin': allowedOrigins[0],
+          Vary: 'Origin',
+        },
+      }
+    );
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const headerUserId = req.headers.get('x-internal-user-id');
+  const headerTenantId = req.headers.get('x-tenant-id');
+  const fallbackUserId = process.env.DEFAULT_INTERNAL_USER_ID || 'dev-user';
+  const fallbackTenantId = process.env.DEFAULT_TENANT_ID || 'dev-tenant';
+
+  const userId = headerUserId ?? (isProduction ? null : fallbackUserId);
+  const tenantId = headerTenantId ?? (isProduction ? null : fallbackTenantId);
+
+  if (!userId || !tenantId) {
+    return NextResponse.json(
+      { error: 'Missing authentication context.' },
+      {
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': effectiveOrigin,
+          Vary: 'Origin',
+        },
+      }
+    );
+  }
   
   try {
     const body = await req.json();
@@ -105,7 +199,13 @@ export async function POST(req: NextRequest) {
       metrics.errorCount++;
       return NextResponse.json(
         { error: 'Invalid request: missing messages or content' }, 
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': effectiveOrigin,
+            Vary: 'Origin',
+          }
+        }
       );
     }
 
@@ -118,7 +218,13 @@ export async function POST(req: NextRequest) {
       metrics.errorCount++;
       return NextResponse.json(
         { error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env.local file.' }, 
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': effectiveOrigin,
+            Vary: 'Origin',
+          }
+        }
       );
     }
 
@@ -196,9 +302,10 @@ export async function POST(req: NextRequest) {
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
         'X-Accel-Buffering': 'no', // 禁用Nginx缓冲
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': effectiveOrigin,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Internal-User-Id, X-Tenant-Id',
+        Vary: 'Origin',
       },
     });
     
@@ -210,6 +317,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       error: error.message,
       requestId: metrics.requestId 
-    }, { status: 500 });
+    }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': effectiveOrigin,
+        Vary: 'Origin',
+      }
+    });
   }
 }

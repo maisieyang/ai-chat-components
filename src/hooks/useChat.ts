@@ -78,6 +78,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
   // 使用 ref 来避免循环依赖
   const optionsRef = useRef(options);
   optionsRef.current = options;
+  const streamingMessageRef = useRef<{ index: number; requestId: string } | null>(null);
 
   // 清除消息
   const clearMessages = useCallback(() => {
@@ -93,21 +94,28 @@ export function useChat(options: UseChatOptions): UseChatReturn {
   }, []);
 
   // 处理标准SSE流式响应
-  const handleStreamingResponse = useCallback(async (response: Response) => {
+  const handleStreamingResponse = useCallback(async (response: Response, requestId: string) => {
     if (!response.body) {
       throw new Error('No response body');
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    const aiMessage: ChatMessage = {
-      role: 'assistant',
-      content: '',
-      timestamp: new Date(),
-    };
+    const timestamp = new Date();
 
-    // 添加空的AI消息到消息列表
-    setMessages(prev => [...prev, aiMessage]);
+    setMessages(prev => {
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: '',
+        timestamp,
+      };
+      const nextMessages = [...prev, assistantMessage];
+      streamingMessageRef.current = {
+        index: nextMessages.length - 1,
+        requestId,
+      };
+      return nextMessages;
+    });
     updateConnectionStatus(ConnectionStatus.CONNECTED);
 
     const startTime = Date.now();
@@ -127,10 +135,9 @@ export function useChat(options: UseChatOptions): UseChatReturn {
 
             try {
               const sseMessage: SSEMessage = JSON.parse(data);
-              
+
               switch (sseMessage.type) {
-                case SSEEventType.METADATA:
-                  // 处理元数据
+                case SSEEventType.METADATA: {
                   const metadata = JSON.parse(sseMessage.data);
                   setMetrics(prev => ({
                     ...prev,
@@ -138,18 +145,29 @@ export function useChat(options: UseChatOptions): UseChatReturn {
                     startTime: Date.now()
                   }));
                   break;
+                }
 
                 case SSEEventType.CONTENT:
-                  // 处理内容块
-                  aiMessage.content += sseMessage.data;
-                  
                   setMessages(prev => {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = { ...aiMessage };
-                    return newMessages;
+                    const context = streamingMessageRef.current;
+                    if (!context || context.requestId !== requestId) {
+                      return prev;
+                    }
+
+                    const { index } = context;
+                    const target = prev[index];
+                    if (!target) {
+                      return prev;
+                    }
+
+                    const updatedMessages = [...prev];
+                    updatedMessages[index] = {
+                      ...target,
+                      content: (target.content || '') + sseMessage.data,
+                    };
+                    return updatedMessages;
                   });
-                  
-                  // 更新性能指标
+
                   setMetrics(prev => ({
                     ...prev,
                     messageCount: prev.messageCount + 1,
@@ -158,18 +176,17 @@ export function useChat(options: UseChatOptions): UseChatReturn {
                   break;
 
                 case SSEEventType.DONE:
-                  // 流式响应完成
+                  streamingMessageRef.current = null;
                   updateConnectionStatus(ConnectionStatus.DISCONNECTED);
                   optionsRef.current.onComplete?.();
                   return;
 
                 case SSEEventType.ERROR:
-                  // 处理错误
-                  const errorMessage = sseMessage.data;
-                  setError(errorMessage);
+                  streamingMessageRef.current = null;
+                  setError(sseMessage.data);
                   setMetrics(prev => ({ ...prev, errorCount: prev.errorCount + 1 }));
                   updateConnectionStatus(ConnectionStatus.ERROR);
-                  optionsRef.current.onError?.(new Error(errorMessage));
+                  optionsRef.current.onError?.(new Error(sseMessage.data));
                   return;
               }
             } catch (e) {
@@ -180,6 +197,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
       }
     } finally {
       reader.releaseLock();
+      streamingMessageRef.current = null;
       updateConnectionStatus(ConnectionStatus.DISCONNECTED);
     }
   }, [updateConnectionStatus]);
@@ -229,7 +247,10 @@ export function useChat(options: UseChatOptions): UseChatReturn {
       }
 
       // 3. 处理流式响应
-      await handleStreamingResponse(response);
+      const requestId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
+      await handleStreamingResponse(response, requestId);
 
       // 调用成功回调
       const lastMessage = newMessages[newMessages.length - 1];
