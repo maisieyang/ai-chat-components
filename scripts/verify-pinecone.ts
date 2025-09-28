@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import 'dotenv/config';
 import { PineconeClient } from '@pinecone-database/pinecone';
 import { File } from 'undici';

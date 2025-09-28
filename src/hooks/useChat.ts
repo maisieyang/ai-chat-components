@@ -285,7 +285,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
           if (errorPayload?.error) {
             errorMessage = errorPayload.error;
           }
-        } catch (parseError) {
+        } catch {
           try {
             errorMessage = await response.text();
           } catch {
