@@ -1,108 +1,235 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { FetchConfluencePagesOptions, ConfluenceSearchResponse, ConfluencePage } from './types';
+import { Buffer } from 'node:buffer';
+import type { ConfluencePage, ConfluenceSearchResponse } from './types';
 
 const DEFAULT_BASE_URL = 'https://cwiki.apache.org/confluence';
 const DEFAULT_PAGE_LIMIT = 25;
-const DEFAULT_MAX_PAGES = 5;
-
-interface FetchResult {
-  pages: ConfluencePage[];
-  rawResponses: ConfluenceSearchResponse[];
-}
+const DEFAULT_MAX_RETRIES = Number(process.env.CONFLUENCE_REQUEST_RETRIES ?? '3');
+const DEFAULT_RETRY_BASE_DELAY_MS = Number(process.env.CONFLUENCE_RETRY_BASE_DELAY_MS ?? '2000');
 
 function sanitizeBaseUrl(value: string) {
   return value.replace(/#.*$/, '').replace(/\/+$/, '');
 }
 
-function getBaseUrl() {
-  const raw = process.env.CONFLUENCE_BASE_URL ?? DEFAULT_BASE_URL;
-  return sanitizeBaseUrl(raw);
-}
-
-function buildRequestUrl(
-  baseUrl: string,
-  start: number,
-  limit: number,
-  opts: FetchConfluencePagesOptions
-) {
-  const params = new URLSearchParams({
-    type: 'page',
-    expand: 'body.storage,version',
-    start: String(start),
-    limit: String(limit),
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
   });
+}
 
-  if (opts.spaceKey) {
-    params.set('spaceKey', opts.spaceKey);
+async function readResponseBody(response: Response) {
+  try {
+    return await response.text();
+  } catch (error) {
+    return `Unable to read response body: ${error instanceof Error ? error.message : String(error)}`;
+  }
+}
+
+interface RetryOptions {
+  maxRetries: number;
+  baseDelayMs: number;
+  authConfigured: boolean;
+  context?: string;
+}
+
+async function fetchWithRetry(url: string, init: RequestInit, options: RetryOptions): Promise<Response> {
+  const { maxRetries, baseDelayMs, authConfigured, context } = options;
+  const safeBaseDelay = Number.isFinite(baseDelayMs) && baseDelayMs > 0 ? baseDelayMs : 2000;
+  const retries = Number.isInteger(maxRetries) && maxRetries >= 0 ? maxRetries : 3;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    if (attempt > 0) {
+      const waitMs = safeBaseDelay * 2 ** (attempt - 1) + Math.random() * 250;
+      console.warn(
+        `Confluence request retry ${attempt}/${retries}: waiting ${Math.round(waitMs)}ms before retrying${
+          context ? ` (${context})` : ''
+        }.`
+      );
+      await sleep(waitMs);
+    }
+
+    try {
+      const response = await fetch(url, init);
+      if (response.ok) {
+        return response;
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        const body = await readResponseBody(response);
+        const hint = authConfigured
+          ? 'Verify CONFLUENCE_EMAIL and CONFLUENCE_API_TOKEN are correct and have access to the requested space.'
+          : 'This endpoint requires authentication but no credentials were provided.';
+        throw new Error(
+          `Confluence authentication failed with status ${response.status}. ${hint} Response body: ${body}`
+        );
+      }
+
+      const shouldRetry = response.status >= 500 || response.status === 429;
+      if (!shouldRetry || attempt === retries) {
+        const body = await readResponseBody(response);
+        throw new Error(
+          `Confluence request failed (${response.status})${context ? ` for ${context}` : ''}. Response body: ${body}`
+        );
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Confluence authentication failed')) {
+        throw error;
+      }
+
+      if (attempt === retries) {
+        throw error;
+      }
+
+      const waitMs = safeBaseDelay * 2 ** attempt + Math.random() * 250;
+      console.warn(
+        `Confluence fetch error (${error instanceof Error ? error.message : String(error)}). Retrying in ${Math.round(
+          waitMs
+        )}ms${context ? ` (${context})` : ''}.`
+      );
+      await sleep(waitMs);
+    }
   }
 
-  if (opts.cql) {
-    params.set('cql', opts.cql);
+  throw new Error('Exhausted retries fetching Confluence content.');
+}
+
+export interface ConfluenceClientOptions {
+  baseUrl?: string;
+  spaceKey?: string;
+  email?: string;
+  apiToken?: string;
+  maxRetries?: number;
+  retryBaseDelayMs?: number;
+}
+
+export interface FetchPagesResult {
+  pages: ConfluencePage[];
+  raw: ConfluenceSearchResponse;
+  hasMore: boolean;
+  nextStart?: number;
+}
+
+function parseNextStart(raw: ConfluenceSearchResponse, baseUrl: string): number | undefined {
+  const nextLink = raw._links?.next;
+  if (!nextLink) {
+    return undefined;
   }
 
-  return `${baseUrl}/rest/api/content?${params.toString()}`;
+  try {
+    const url = new URL(nextLink, raw._links?.base ?? `${baseUrl}/`);
+    const startParam = url.searchParams.get('start');
+    return startParam ? Number(startParam) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
-async function ensureDebugDirectory() {
-  const debugDir = path.join(process.cwd(), 'data', 'raw');
-  await fs.mkdir(debugDir, { recursive: true });
-  return debugDir;
-}
+export class ConfluenceClient {
+  private readonly baseUrl: string;
+  private readonly defaultSpaceKey?: string;
+  private readonly authHeader?: string;
+  private readonly maxRetries: number;
+  private readonly retryBaseDelayMs: number;
 
-async function persistRawResponse(debugDir: string, payload: ConfluenceSearchResponse, start: number) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filePath = path.join(debugDir, `confluence-page-${start}-${timestamp}.json`);
-  await fs.writeFile(filePath, JSON.stringify(payload, null, 2), 'utf8');
-}
+  constructor(options: ConfluenceClientOptions = {}) {
+    const rawBase = options.baseUrl ?? process.env.CONFLUENCE_BASE_URL ?? DEFAULT_BASE_URL;
+    this.baseUrl = sanitizeBaseUrl(rawBase);
+    this.defaultSpaceKey = options.spaceKey ?? process.env.CONFLUENCE_SPACE_KEY ?? undefined;
 
-export async function fetchConfluencePages(
-  options: FetchConfluencePagesOptions = {}
-): Promise<FetchResult> {
-  const baseUrl = getBaseUrl();
-  const pageLimit = options.pageLimit ?? DEFAULT_PAGE_LIMIT;
-  const maxPages = options.maxPages ?? DEFAULT_MAX_PAGES;
+    const email = options.email ?? process.env.CONFLUENCE_EMAIL ?? process.env.CONFLUENCE_USERNAME;
+    const apiToken = options.apiToken ?? process.env.CONFLUENCE_API_TOKEN;
+    if (email && apiToken) {
+      this.authHeader = `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`;
+    }
 
-  const pages: ConfluencePage[] = [];
-  const rawResponses: ConfluenceSearchResponse[] = [];
-  const debugDir = await ensureDebugDirectory();
+    this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
+    this.retryBaseDelayMs = options.retryBaseDelayMs ?? DEFAULT_RETRY_BASE_DELAY_MS;
+  }
 
-  let start = 0;
-  let pageCount = 0;
-  let hasMore = true;
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
 
-  while (hasMore && pageCount < maxPages) {
-    const url = buildRequestUrl(baseUrl, start, pageLimit, options);
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
+  getDefaultSpaceKey(): string | undefined {
+    return this.defaultSpaceKey;
+  }
+
+  private buildUrl(path: string) {
+    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+    return new URL(normalizedPath, `${this.baseUrl}/`).toString();
+  }
+
+  private buildHeaders(headers?: HeadersInit) {
+    const result = new Headers(headers ?? {});
+    result.set('Accept', 'application/json');
+    if (this.authHeader) {
+      result.set('Authorization', this.authHeader);
+    }
+    return result;
+  }
+
+  private async request(path: string, init: RequestInit = {}, context?: string) {
+    const url = this.buildUrl(path);
+    const headers = this.buildHeaders(init.headers);
+    return fetchWithRetry(
+      url,
+      {
+        ...init,
+        headers,
       },
-      signal: options.signal,
+      {
+        maxRetries: this.maxRetries,
+        baseDelayMs: this.retryBaseDelayMs,
+        authConfigured: Boolean(this.authHeader),
+        context,
+      }
+    );
+  }
+
+  async fetchPages(spaceKey?: string, start = 0, limit = DEFAULT_PAGE_LIMIT, signal?: AbortSignal): Promise<FetchPagesResult> {
+    const params = new URLSearchParams({
+      type: 'page',
+      start: String(start),
+      limit: String(limit),
     });
 
-    if (!response.ok) {
-      throw new Error(`Confluence request failed (${response.status}): ${await response.text()}`);
+    const resolvedSpaceKey = spaceKey ?? this.defaultSpaceKey;
+    if (resolvedSpaceKey) {
+      params.set('spaceKey', resolvedSpaceKey);
     }
 
-    const payload = (await response.json()) as ConfluenceSearchResponse;
-    rawResponses.push(payload);
-    await persistRawResponse(debugDir, payload, start);
+    const response = await this.request(
+      `rest/api/content?${params.toString()}`,
+      {
+        method: 'GET',
+        signal,
+      },
+      'GET /rest/api/content'
+    );
 
-    if (Array.isArray(payload.results)) {
-      pages.push(...payload.results);
-    }
+    const raw = (await response.json()) as ConfluenceSearchResponse;
+    const pages = Array.isArray(raw.results) ? raw.results : [];
+    const hasMore = Boolean(raw._links?.next) && pages.length > 0;
 
-    pageCount += 1;
-
-    const nextLink = payload._links?.next;
-    if (!nextLink || payload.results.length === 0) {
-      hasMore = false;
-    } else {
-      start += payload.limit ?? pageLimit;
-    }
+    return {
+      pages,
+      raw,
+      hasMore,
+      nextStart: parseNextStart(raw, this.baseUrl),
+    };
   }
 
-  return { pages, rawResponses };
+  async fetchPageContent(pageId: string, signal?: AbortSignal): Promise<ConfluencePage> {
+    const response = await this.request(
+      `rest/api/content/${pageId}?expand=body.storage,version`,
+      {
+        method: 'GET',
+        signal,
+      },
+      `GET /rest/api/content/${pageId}`
+    );
+
+    return (await response.json()) as ConfluencePage;
+  }
 }
 
-export type { ConfluencePage } from './types';
+export default ConfluenceClient;

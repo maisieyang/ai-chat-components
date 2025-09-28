@@ -28,12 +28,3 @@ export interface ConfluenceSearchResponse {
     base?: string;
   };
 }
-
-export interface FetchConfluencePagesOptions {
-  spaceKey?: string;
-  cql?: string;
-  pageLimit?: number;
-  maxPages?: number;
-  signal?: AbortSignal;
-}
-
