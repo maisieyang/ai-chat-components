@@ -36,6 +36,16 @@ interface PerformanceMetrics {
   latency: number[];
 }
 
+interface StreamMetadata {
+  requestId?: string;
+  references?: Array<{
+    index: number;
+    title: string;
+    url?: string;
+  }>;
+  [key: string]: unknown;
+}
+
 interface UseChatOptions {
   apiUrl: string;
   onError?: (error: Error) => void;
@@ -138,12 +148,38 @@ export function useChat(options: UseChatOptions): UseChatReturn {
 
               switch (sseMessage.type) {
                 case SSEEventType.METADATA: {
-                  const metadata = JSON.parse(sseMessage.data);
+                  const metadata = JSON.parse(sseMessage.data) as StreamMetadata;
                   setMetrics(prev => ({
                     ...prev,
-                    requestId: metadata.requestId,
+                    requestId: metadata.requestId ?? prev.requestId,
                     startTime: Date.now()
                   }));
+
+                  if (metadata.references) {
+                    setMessages(prev => {
+                      const context = streamingMessageRef.current;
+                      if (!context || context.requestId !== requestId) {
+                        return prev;
+                      }
+
+                      const { index } = context;
+                      const target = prev[index];
+                      if (!target) {
+                        return prev;
+                      }
+
+                      const updatedMessages = [...prev];
+                      updatedMessages[index] = {
+                        ...target,
+                        references: metadata.references,
+                        metadata: {
+                          ...(target.metadata ?? {}),
+                          references: metadata.references,
+                        },
+                      };
+                      return updatedMessages;
+                    });
+                  }
                   break;
                 }
 
@@ -243,7 +279,55 @@ export function useChat(options: UseChatOptions): UseChatReturn {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+          const errorPayload = await response.json();
+          if (errorPayload?.error) {
+            errorMessage = errorPayload.error;
+          }
+        } catch (parseError) {
+          try {
+            errorMessage = await response.text();
+          } catch {
+            // ignore secondary parsing errors
+          }
+        }
+
+        streamingMessageRef.current = null;
+        updateConnectionStatus(ConnectionStatus.ERROR);
+        setError(errorMessage);
+
+        setMessages(prev => {
+          if (!prev.length) {
+            return prev;
+          }
+
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          const lastMessage = updated[lastIndex];
+
+          if (lastMessage?.role === 'assistant') {
+            updated[lastIndex] = {
+              ...lastMessage,
+              content: errorMessage,
+              metadata: {
+                ...(lastMessage.metadata ?? {}),
+                error: true,
+              },
+            };
+          } else {
+            updated.push({
+              role: 'assistant',
+              content: errorMessage,
+              timestamp: new Date(),
+              metadata: { error: true },
+            });
+          }
+
+          return updated;
+        });
+
+        return;
       }
 
       // 3. 处理流式响应

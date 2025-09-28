@@ -12,6 +12,7 @@
     "@ai-sdk/react": "^2.0.49",
     "@langchain/core": "^0.3.75",
     "@langchain/openai": "^0.6.11",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@tailwindcss/typography": "^0.5.18",
     "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^5.0.41",

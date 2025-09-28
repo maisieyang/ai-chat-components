@@ -1,1 +1,1 @@
-export * from './faissStore';
+export * from './pineconeStore';

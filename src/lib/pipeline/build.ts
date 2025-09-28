@@ -6,7 +6,7 @@ import {
   type CleanConfluencePage,
   type PageChunk,
 } from '../confluence';
-import { FaissVectorStore } from '../vectorstore';
+import { getPineconeStore, PineconeStore } from '../vectorstore';
 
 export interface BuildKnowledgeBaseOptions extends FetchConfluencePagesOptions {
   chunkMinTokens?: number;
@@ -14,7 +14,7 @@ export interface BuildKnowledgeBaseOptions extends FetchConfluencePagesOptions {
 }
 
 export interface KnowledgeBase {
-  store: FaissVectorStore;
+  store: PineconeStore;
   pages: CleanConfluencePage[];
   chunks: PageChunk[];
 }
@@ -35,8 +35,10 @@ export async function buildKnowledgeBase(
     })
   );
 
-  const store = new FaissVectorStore();
-  await store.addChunks(allChunks);
+  const store = await getPineconeStore();
+  if (allChunks.length > 0) {
+    await store.upsertChunks(allChunks);
+  }
 
   return {
     store,
@@ -44,4 +46,3 @@ export async function buildKnowledgeBase(
     chunks: allChunks,
   };
 }
-

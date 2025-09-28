@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { ChatWindowProps } from './types';
+import { ChatWindowProps, RenderMessageParams } from './types';
 import { useChat } from '../../hooks/useChat';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
 import { MessageBubble } from '../MessageBubble';
@@ -11,10 +11,13 @@ import { ErrorBoundary } from '../ErrorBoundary';
 import { ThemeToggle } from '../ThemeToggle';
 import { SendButton } from '../SendButton';
 
-export function ChatWindow({ 
-  apiUrl, 
+export function ChatWindow({
+  apiUrl,
   placeholder = "Type your message...",
-  className = ""
+  className = "",
+  title = 'AI Chat Assistant',
+  emptyState,
+  renderMessage,
 }: ChatWindowProps) {
   // 输入框引用
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -78,6 +81,26 @@ export function ChatWindow({
     // 这里可以添加反馈收集逻辑
   };
 
+  const defaultRenderMessage = ({ message, isStreaming, onFeedback }: RenderMessageParams) => (
+    <MessageBubble
+      message={message}
+      onFeedback={onFeedback}
+      isStreaming={isStreaming && message.role === 'assistant'}
+    />
+  );
+
+  const renderMessageNode = renderMessage ?? defaultRenderMessage;
+
+  const computedEmptyState = emptyState ?? {
+    icon: '🤖',
+    headline: 'AI Chat Assistant',
+    description: '开始对话，获得智能回答',
+    suggestions: [
+      '💡 尝试问：“解释React Hooks的工作原理”',
+      '💡 尝试问：“写一个Python函数来计算斐波那契数列”',
+    ],
+  };
+
   return (
     <ErrorBoundary>
       <div className={`flex flex-col h-screen bg-bg-primary transition-colors duration-200 ${className}`}>
@@ -85,7 +108,7 @@ export function ChatWindow({
             <div className="flex items-center justify-between p-4 bg-bg-primary">
               <div className="flex items-center space-x-3">
                 <h1 className="text-xl font-semibold text-text-primary">
-                  AI Chat Assistant
+                  {title}
                 </h1>
                 {/* 连接状态指示器 */}
                 <div className="flex items-center space-x-2">
@@ -123,29 +146,39 @@ export function ChatWindow({
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-text-tertiary">
               <div className="text-center max-w-md">
-                <div className="text-6xl mb-4">🤖</div>
+                {computedEmptyState.icon && (
+                  <div className="text-6xl mb-4">{computedEmptyState.icon}</div>
+                )}
                 <h2 className="text-3xl font-semibold mb-2 text-text-primary">
-                  AI Chat Assistant
+                  {computedEmptyState.headline}
                 </h2>
-                <p className="text-xl mb-6 text-text-secondary">
-                  开始对话，获得智能回答
-                </p>
-                <div className="space-y-2 text-base text-text-tertiary">
-                  <p>💡 尝试问：&quot;解释React Hooks的工作原理&quot;</p>
-                  <p>💡 或者：&quot;写一个Python函数来计算斐波那契数列&quot;</p>
-                </div>
+                {computedEmptyState.description && (
+                  <p className="text-xl mb-6 text-text-secondary">
+                    {computedEmptyState.description}
+                  </p>
+                )}
+                {computedEmptyState.suggestions?.length ? (
+                  <div className="space-y-2 text-base text-text-tertiary">
+                    {computedEmptyState.suggestions.map((suggestion, idx) => (
+                      <p key={idx}>{suggestion}</p>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (
             <div className="max-w-4xl mx-auto px-4">
-              {messages.map((message, index) => (
-                <MessageBubble
-                  key={index}
-                  message={message}
-                  onFeedback={handleFeedback}
-                  isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
-                />
-              ))}
+              {messages.map((message, index) => {
+                const node = renderMessageNode({
+                  message,
+                  index,
+                  messages,
+                  isStreaming: isLoading && index === messages.length - 1 && message.role === 'assistant',
+                  onFeedback: handleFeedback,
+                });
+
+                return <React.Fragment key={index}>{node}</React.Fragment>;
+              })}
             </div>
           )}
         </div>
