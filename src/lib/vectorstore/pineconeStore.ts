@@ -15,32 +15,52 @@ const UPSERT_BATCH_SIZE = 50;
 const DEFAULT_NAMESPACE = process.env.PINECONE_NAMESPACE ?? 'default';
 
 interface ParsedHost {
+  host: string;
   environment: string;
+  indexName: string;
   projectId?: string;
 }
 
-function parsePineconeHost(indexName: string, host: string): ParsedHost {
+function parsePineconeHost(host: string, fallback?: { indexName?: string; projectId?: string }): ParsedHost {
   try {
     const normalizedHost = host.startsWith('http') ? host : `https://${host}`;
     const url = new URL(normalizedHost);
     const hostname = url.hostname;
 
-    const svcSplit = hostname.split('.svc.');
-    if (svcSplit.length !== 2) {
-      throw new Error('Host must include a ".svc." segment, e.g. my-index.svc.region.pinecone.io');
+    const svcMarker = '.svc.';
+    const markerIndex = hostname.indexOf(svcMarker);
+    if (markerIndex === -1) {
+      throw new Error('Host must include a ".svc." segment, e.g. my-index-xyz.svc.region.pinecone.io');
     }
 
-    const [leftPart, rightPart] = svcSplit;
-    const environment = rightPart.replace(/\.pinecone\.io$/i, '');
+    const subdomain = hostname.slice(0, markerIndex);
+    const environmentPart = hostname
+      .slice(markerIndex + svcMarker.length)
+      .replace(/\.pinecone\.io$/i, '')
+      .trim();
 
-    if (!environment) {
+    if (!environmentPart) {
       throw new Error('Could not derive environment from host.');
     }
 
-    const expectedPrefix = `${indexName}-`;
-    const projectId = leftPart.startsWith(expectedPrefix) ? leftPart.slice(expectedPrefix.length) : undefined;
+    const segments = subdomain.split('-');
+    let projectId = segments.length > 1 ? segments.pop() : undefined;
+    let indexName = segments.join('-');
 
-    return { environment, projectId };
+    if (!indexName) {
+      indexName = fallback?.indexName ?? subdomain;
+    }
+
+    if (!projectId) {
+      projectId = fallback?.projectId;
+    }
+
+    return {
+      host: `https://${hostname}`,
+      environment: environmentPart,
+      indexName,
+      projectId,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Invalid PINECONE_HOST value: ${message}`);
@@ -81,14 +101,41 @@ export class PineconeStore {
   private index: Index | null = null;
   private readonly indexName: string;
   private readonly namespace: string;
+  private readonly environment?: string;
+  private readonly projectId?: string;
+  private readonly indexHost?: string;
 
   constructor() {
-    const indexName = process.env.PINECONE_INDEX_NAME ?? process.env.PINECONE_INDEX;
-    if (!indexName) {
-      throw new Error('PINECONE_INDEX_NAME (or PINECONE_INDEX) environment variable is required.');
+    const explicitIndexName = process.env.PINECONE_INDEX_NAME ?? process.env.PINECONE_INDEX;
+    const explicitProjectId = process.env.PINECONE_PROJECT_ID?.trim();
+    const hostEnv = process.env.PINECONE_HOST ?? process.env.PINECONE_INDEX_HOST;
+
+    if (hostEnv) {
+      const parsed = parsePineconeHost(hostEnv, {
+        indexName: explicitIndexName,
+        projectId: explicitProjectId,
+      });
+
+      this.indexName = parsed.indexName;
+      this.environment = parsed.environment;
+      this.projectId = parsed.projectId;
+      this.indexHost = parsed.host;
+    } else {
+      if (!explicitIndexName) {
+        throw new Error('PINECONE_INDEX_NAME (or PINECONE_INDEX) environment variable is required.');
+      }
+
+      const environment = process.env.PINECONE_ENVIRONMENT?.trim();
+
+      if (!environment) {
+        throw new Error('PINECONE_ENVIRONMENT environment variable is required when PINECONE_HOST is not set.');
+      }
+
+      this.indexName = explicitIndexName;
+      this.environment = environment;
+      this.projectId = explicitProjectId;
     }
 
-    this.indexName = indexName;
     this.namespace = DEFAULT_NAMESPACE;
   }
 
@@ -179,30 +226,20 @@ export class PineconeStore {
       throw new Error('PINECONE_API_KEY environment variable is required.');
     }
 
-    const host = process.env.PINECONE_HOST?.trim();
-    const environment = process.env.PINECONE_ENVIRONMENT?.trim();
-
-    if (!host && !environment) {
-      throw new Error('Set PINECONE_HOST for serverless indexes or PINECONE_ENVIRONMENT for legacy indexes.');
+    if (this.indexHost && !this.projectId) {
+      throw new Error(
+        'Unable to determine Pinecone project ID from host. Set PINECONE_PROJECT_ID or use a host containing the index suffix.'
+      );
     }
 
-    let resolvedEnvironment = environment;
-    let resolvedProjectId: string | undefined;
-
-    if (host) {
-      const parsed = parsePineconeHost(this.indexName, host);
-      resolvedEnvironment = parsed.environment;
-      resolvedProjectId = parsed.projectId;
-    }
-
-    if (!resolvedEnvironment) {
-      throw new Error('Unable to determine Pinecone environment. Check PINECONE_HOST or PINECONE_ENVIRONMENT.');
+    if (!this.environment) {
+      throw new Error('Unable to determine Pinecone environment. Set PINECONE_HOST or PINECONE_ENVIRONMENT.');
     }
 
     this.pinecone = new Pinecone({
       apiKey,
-      environment: resolvedEnvironment,
-      ...(resolvedProjectId ? { projectId: resolvedProjectId } : {}),
+      environment: this.environment,
+      ...(this.projectId ? { projectId: this.projectId } : {}),
     });
 
     return this.pinecone;
