@@ -38,8 +38,8 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
     defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     chatModelEnv: 'QWEN_MODEL',
     embeddingModelEnv: 'QWEN_EMBEDDING_MODEL',
-    fallbackChatModel: 'qwen-plus',
-    fallbackEmbeddingModel: 'text-embedding-v1',
+    fallbackChatModel: 'qwen-max',
+    fallbackEmbeddingModel: 'text-embedding-v4',
     displayName: 'Qwen',
   },
 };

@@ -5,7 +5,7 @@ import { ChatWindow } from '@/components/ChatWindow';
 import { MessageBubble } from '@/components/MessageBubble';
 import { QAReferenceList } from '@/components/QAReferenceList';
 import type { RenderMessageParams } from '@/components/ChatWindow/types';
-import { PROVIDER_OPTIONS, type ProviderName } from '@/lib/providers/types';
+import { PROVIDER_OPTIONS, type ProviderName, normalizeProviderName } from '@/lib/providers/types';
 
 const QA_EMPTY_STATE = {
   icon: '📚',
@@ -20,7 +20,7 @@ const QA_EMPTY_STATE = {
 
 export default function QAPage() {
   const [provider, setProvider] = useState<ProviderName>(
-    (process.env.NEXT_PUBLIC_PROVIDER as ProviderName) ?? 'openai'
+    normalizeProviderName(process.env.NEXT_PUBLIC_PROVIDER as ProviderName | undefined)
   );
 
   const requestMetadata = useMemo(() => ({ provider }), [provider]);

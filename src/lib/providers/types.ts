@@ -7,5 +7,8 @@ export function normalizeProviderName(value?: string | null): ProviderName {
   if (normalized === 'qwen' || normalized === 'qwen-plus' || normalized === 'tongyi' || normalized === '通义千问') {
     return 'qwen';
   }
-  return 'openai';
+  if (normalized === 'openai' || normalized === 'gpt' || normalized === 'chatgpt') {
+    return 'openai';
+  }
+  return 'qwen';
 }

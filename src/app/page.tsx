@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { ChatWindow } from '@/components/ChatWindow';
-import { PROVIDER_OPTIONS, type ProviderName } from '@/lib/providers/types';
+import { PROVIDER_OPTIONS, type ProviderName, normalizeProviderName } from '@/lib/providers/types';
 
-const DEFAULT_PROVIDER = (process.env.NEXT_PUBLIC_PROVIDER as ProviderName) ?? 'openai';
+const DEFAULT_PROVIDER = normalizeProviderName(process.env.NEXT_PUBLIC_PROVIDER as ProviderName | undefined);
 
 export default function Home() {
   const [provider, setProvider] = useState<ProviderName>(DEFAULT_PROVIDER);
