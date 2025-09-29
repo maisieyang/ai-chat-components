@@ -1,23 +1,51 @@
-import { PineconeClient, type IndexOperationsApi } from '@pinecone-database/pinecone';
-import { File } from 'undici';
+import { Pinecone, type Index } from '@pinecone-database/pinecone';
+import { File as NodeFile } from 'node:buffer';
 import { embedTexts, embedText } from '../embeddings';
 import type { PageChunk } from '../confluence/chunk';
 
 // Pinecone's client (via undici) expects a global File object when running under Node.
 // Next.js edge runtime already provides it, but the Node runtime in development may not.
 // Assign a polyfill from undici when needed.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-if (typeof globalThis.File === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  globalThis.File = File;
+const globalWithFile = globalThis as unknown as { File?: typeof NodeFile };
+if (typeof globalWithFile.File === 'undefined') {
+  globalWithFile.File = NodeFile;
 }
 
-const INDEX_DIMENSION = 1536;
 const UPSERT_BATCH_SIZE = 50;
-const INDEX_METRIC = 'cosine';
 const DEFAULT_NAMESPACE = process.env.PINECONE_NAMESPACE ?? 'default';
+
+interface ParsedHost {
+  environment: string;
+  projectId?: string;
+}
+
+function parsePineconeHost(indexName: string, host: string): ParsedHost {
+  try {
+    const normalizedHost = host.startsWith('http') ? host : `https://${host}`;
+    const url = new URL(normalizedHost);
+    const hostname = url.hostname;
+
+    const svcSplit = hostname.split('.svc.');
+    if (svcSplit.length !== 2) {
+      throw new Error('Host must include a ".svc." segment, e.g. my-index.svc.region.pinecone.io');
+    }
+
+    const [leftPart, rightPart] = svcSplit;
+    const environment = rightPart.replace(/\.pinecone\.io$/i, '');
+
+    if (!environment) {
+      throw new Error('Could not derive environment from host.');
+    }
+
+    const expectedPrefix = `${indexName}-`;
+    const projectId = leftPart.startsWith(expectedPrefix) ? leftPart.slice(expectedPrefix.length) : undefined;
+
+    return { environment, projectId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Invalid PINECONE_HOST value: ${message}`);
+  }
+}
 
 type ChunkMetadata = {
   title: string;
@@ -48,15 +76,9 @@ export interface SearchResult {
   score: number;
 }
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 export class PineconeStore {
-  private client: PineconeClient | null = null;
-  private index: IndexOperationsApi | null = null;
+  private pinecone: Pinecone | null = null;
+  private index: Index | null = null;
   private readonly indexName: string;
   private readonly namespace: string;
 
@@ -80,6 +102,7 @@ export class PineconeStore {
     }
 
     const index = await this.getIndex();
+    const target = this.namespace ? index.namespace(this.namespace) : index;
 
     for (let start = 0; start < chunks.length; start += UPSERT_BATCH_SIZE) {
       const batch = chunks.slice(start, start + UPSERT_BATCH_SIZE);
@@ -101,26 +124,19 @@ export class PineconeStore {
         };
       });
 
-      await index.upsert({
-        upsertRequest: {
-          vectors,
-          namespace: this.namespace,
-        },
-      });
+      await target.upsert(vectors);
     }
   }
 
   async search(query: string, topK = 5): Promise<SearchResult[]> {
     const index = await this.getIndex();
+    const target = this.namespace ? index.namespace(this.namespace) : index;
     const queryEmbedding = await embedText(query);
 
-    const response = await index.query({
-      queryRequest: {
-        vector: queryEmbedding,
-        topK,
-        includeMetadata: true,
-        namespace: this.namespace,
-      },
+    const response = await target.query({
+      vector: queryEmbedding,
+      topK,
+      includeMetadata: true,
     });
 
     const matches = response.matches ?? [];
@@ -143,63 +159,55 @@ export class PineconeStore {
       });
   }
 
-  private async getIndex(): Promise<IndexOperationsApi> {
+  private async getIndex(): Promise<Index> {
     if (this.index) {
       return this.index;
     }
 
-    const client = await this.getClient();
-    await this.ensureIndexExists(client);
-    this.index = client.Index(this.indexName);
+    const pinecone = await this.getPinecone();
+    this.index = pinecone.index(this.indexName);
     return this.index;
   }
 
-  private async getClient(): Promise<PineconeClient> {
-    if (this.client) {
-      return this.client;
+  private async getPinecone(): Promise<Pinecone> {
+    if (this.pinecone) {
+      return this.pinecone;
     }
 
     const apiKey = process.env.PINECONE_API_KEY;
-    const environment = process.env.PINECONE_ENVIRONMENT;
-
-    if (!apiKey || !environment) {
-      throw new Error('PINECONE_API_KEY and PINECONE_ENVIRONMENT environment variables are required.');
+    if (!apiKey) {
+      throw new Error('PINECONE_API_KEY environment variable is required.');
     }
 
-    const client = new PineconeClient();
-    await client.init({ apiKey, environment });
-    this.client = client;
+    const host = process.env.PINECONE_HOST?.trim();
+    const environment = process.env.PINECONE_ENVIRONMENT?.trim();
 
-    return client;
-  }
-
-  private async ensureIndexExists(client: PineconeClient) {
-    const existingIndexes = await client.listIndexes();
-    if (existingIndexes.includes(this.indexName)) {
-      return;
+    if (!host && !environment) {
+      throw new Error('Set PINECONE_HOST for serverless indexes or PINECONE_ENVIRONMENT for legacy indexes.');
     }
 
-    await client.createIndex({
-      createRequest: {
-        name: this.indexName,
-        dimension: INDEX_DIMENSION,
-        metric: INDEX_METRIC,
-        pods: 1,
-        replicas: 1,
-        podType: 'p1.x1',
-      },
+    let resolvedEnvironment = environment;
+    let resolvedProjectId: string | undefined;
+
+    if (host) {
+      const parsed = parsePineconeHost(this.indexName, host);
+      resolvedEnvironment = parsed.environment;
+      resolvedProjectId = parsed.projectId;
+    }
+
+    if (!resolvedEnvironment) {
+      throw new Error('Unable to determine Pinecone environment. Check PINECONE_HOST or PINECONE_ENVIRONMENT.');
+    }
+
+    this.pinecone = new Pinecone({
+      apiKey,
+      environment: resolvedEnvironment,
+      ...(resolvedProjectId ? { projectId: resolvedProjectId } : {}),
     });
 
-    for (let attempt = 0; attempt < 30; attempt += 1) {
-      const description = await client.describeIndex({ indexName: this.indexName });
-      if (description.status?.ready) {
-        return;
-      }
-      await sleep(6000);
-    }
-
-    throw new Error(`Timed out waiting for Pinecone index "${this.indexName}" to be ready.`);
+    return this.pinecone;
   }
+
 }
 
 let storePromise: Promise<PineconeStore> | null = null;
@@ -215,5 +223,3 @@ export async function getPineconeStore(): Promise<PineconeStore> {
 
   return storePromise;
 }
-
-export type { PineconeStore };
