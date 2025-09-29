@@ -1,1 +1,1 @@
-export * from './openai';
+export { embedText, embedTexts } from '../providers/modelProvider';

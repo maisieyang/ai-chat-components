@@ -1,14 +1,14 @@
-import OpenAI, { type ChatCompletionChunk } from 'openai';
 import { PineconeStore, SearchResult } from '../vectorstore';
+import {
+  chatCompletion,
+  chatCompletionStream,
+  type ChatCompletionChunk,
+  resolveProvider,
+  type ProviderName,
+  type ProviderChatMessage,
+} from '../providers/modelProvider';
 
-const QA_MODEL = 'gpt-4o-mini';
-
-function createOpenAIClient() {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is required for question answering');
-  }
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-}
+const DEFAULT_TEMPERATURE = 0.2;
 
 interface AnswerReferences {
   index: number;
@@ -71,38 +71,43 @@ Question: ${question}`;
 }
 
 export class QAEngine {
-  constructor(private readonly store: PineconeStore, private readonly topK = 5) {}
+  constructor(
+    private readonly store: PineconeStore,
+    private readonly topK = 5,
+    private readonly defaultProvider: ProviderName = resolveProvider()
+  ) {}
 
-  async answerQuestion(question: string, chatHistory?: string): Promise<AnswerResponse> {
+  async answerQuestion(
+    question: string,
+    chatHistory?: string,
+    providerOverride?: ProviderName | string
+  ): Promise<AnswerResponse> {
     const { prompt, references } = await this.prepare(question, chatHistory);
+    const provider = resolveProvider(providerOverride ?? this.defaultProvider);
 
-    const client = createOpenAIClient();
-    const completion = await client.chat.completions.create({
-      model: QA_MODEL,
-      messages: [
-        { role: 'system', content: 'You are an expert assistant for banking documentation.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.2,
+    const { text } = await chatCompletion({
+      messages: this.buildMessages(prompt),
+      temperature: DEFAULT_TEMPERATURE,
+      provider,
     });
 
-    const answer = completion.choices[0]?.message?.content?.trim() ?? 'I do not have enough information to answer that.';
+    const answer = text || 'I do not have enough information to answer that.';
 
     return { answer, references };
   }
 
-  async createStreamingCompletion(question: string, chatHistory?: string) {
+  async createStreamingCompletion(
+    question: string,
+    chatHistory?: string,
+    providerOverride?: ProviderName | string
+  ) {
     const { prompt, references } = await this.prepare(question, chatHistory);
-    const client = createOpenAIClient();
+    const provider = resolveProvider(providerOverride ?? this.defaultProvider);
 
-    const stream = await client.chat.completions.create({
-      model: QA_MODEL,
-      stream: true,
-      temperature: 0.2,
-      messages: [
-        { role: 'system', content: 'You are an expert assistant for banking documentation.' },
-        { role: 'user', content: prompt },
-      ],
+    const { stream } = await chatCompletionStream({
+      messages: this.buildMessages(prompt),
+      temperature: DEFAULT_TEMPERATURE,
+      provider,
     });
 
     return { references, stream } as {
@@ -121,5 +126,12 @@ export class QAEngine {
     const prompt = buildPrompt(question, context, chatHistory);
 
     return { prompt, references };
+  }
+
+  private buildMessages(prompt: string): ProviderChatMessage[] {
+    return [
+      { role: 'system', content: 'You are an expert assistant for banking documentation.' },
+      { role: 'user', content: prompt },
+    ];
   }
 }

@@ -61,7 +61,7 @@ interface UseChatReturn {
   messages: ChatMessage[];
   input: string;
   setInput: (input: string) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, payload?: Record<string, unknown>) => Promise<void>;
   isLoading: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
@@ -89,6 +89,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
   const optionsRef = useRef(options);
   optionsRef.current = options;
   const streamingMessageRef = useRef<{ index: number; requestId: string } | null>(null);
+  const lastPayloadRef = useRef<Record<string, unknown> | undefined>(undefined);
 
   // 清除消息
   const clearMessages = useCallback(() => {
@@ -239,8 +240,14 @@ export function useChat(options: UseChatOptions): UseChatReturn {
   }, [updateConnectionStatus]);
 
   // 发送消息的核心逻辑
-  const sendMessageCore = useCallback(async (content: string, currentMessages: ChatMessage[]) => {
+  const sendMessageCore = useCallback(async (
+    content: string,
+    currentMessages: ChatMessage[],
+    payload?: Record<string, unknown>
+  ) => {
     if (!content.trim() || isLoading) return;
+
+    lastPayloadRef.current = payload;
 
     // 调用开始回调
     optionsRef.current.onStart?.();
@@ -274,7 +281,8 @@ export function useChat(options: UseChatOptions): UseChatReturn {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: newMessages
+          messages: newMessages,
+          ...(payload ?? {}),
         })
       });
 
@@ -364,8 +372,9 @@ export function useChat(options: UseChatOptions): UseChatReturn {
   }, [isLoading, handleStreamingResponse, updateConnectionStatus]);
 
   // 发送消息
-  const sendMessage = useCallback(async (content: string) => {
-    await sendMessageCore(content, messages);
+  const sendMessage = useCallback(async (content: string, payload?: Record<string, unknown>) => {
+    lastPayloadRef.current = payload;
+    await sendMessageCore(content, messages, payload);
   }, [sendMessageCore, messages]);
 
   // 重试机制
@@ -381,7 +390,7 @@ export function useChat(options: UseChatOptions): UseChatReturn {
     // 重新发送最后一条用户消息
     const lastUserMessage = messages[messages.length - 1];
     if (lastUserMessage && lastUserMessage.role === 'user') {
-      await sendMessageCore(lastUserMessage.content, messages.slice(0, -1));
+      await sendMessageCore(lastUserMessage.content, messages.slice(0, -1), lastPayloadRef.current);
     }
   }, [retryCount, messages, sendMessageCore]);
 

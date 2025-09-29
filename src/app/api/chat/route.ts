@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
+import {
+  chatCompletionStream,
+  resolveProvider,
+  type ProviderChatMessage,
+} from '@/lib/providers/modelProvider';
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 // 标准SSE事件类型
 enum SSEEventType {
@@ -33,9 +37,7 @@ interface VercelChatMessage {
   content: string;
 }
 
-const formatMessage = (message: VercelChatMessage) => {
-  return `${message.role}: ${message.content}`;
-};
+const formatMessage = (message: VercelChatMessage) => `${message.role}: ${message.content}`;
 
 // SSE消息构建函数
 const buildSSEMessage = (type: SSEEventType, data: string, id?: string): string => {
@@ -138,6 +140,8 @@ User Input: {input}
 
 Provide a comprehensive technical response in ChatGPT-style Markdown format:`;
 
+const SYSTEM_PROMPT = 'You are a technical writing assistant. Produce clear technical answers, follow any formatting instructions provided by the user prompt, and keep responses concise yet complete.';
+
 export async function POST(req: NextRequest) {
   const metrics = createPerformanceMetrics();
   const baseOrigins = ['https://intranet.bank.local'];
@@ -193,6 +197,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const messages: VercelChatMessage[] = body.messages ?? [];
+    const requestedProvider = typeof body.provider === 'string' ? body.provider : undefined;
+    const provider = resolveProvider(requestedProvider);
     
     // 输入验证
     if (!messages.length || !messages[messages.length - 1]?.content) {
@@ -213,33 +219,20 @@ export async function POST(req: NextRequest) {
     const currentMessageContent = messages[messages.length - 1].content;
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
-    // 检查API密钥
-    if (!process.env.OPENAI_API_KEY) {
-      metrics.errorCount++;
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env.local file.' }, 
-        { 
-          status: 500,
-          headers: {
-            'Access-Control-Allow-Origin': effectiveOrigin,
-            Vary: 'Origin',
-          }
-        }
-      );
-    }
-
-    const model = new ChatOpenAI({
-      model: "gpt-4o-mini",
-      temperature: 0.7,
-      streaming: true,
-      maxTokens: 4000,
-      timeout: 30000, // 30秒超时
-    });
-
-    const chain = prompt.pipe(model);
-    const stream = await chain.stream({
+    const promptContext = await prompt.format({
       chat_history: formattedPreviousMessages.join("\n"),
       input: currentMessageContent,
+    });
+
+    const providerMessages: ProviderChatMessage[] = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: promptContext },
+    ];
+
+    const { stream, model } = await chatCompletionStream({
+      messages: providerMessages,
+      temperature: 0.7,
+      provider,
     });
 
     // 创建标准SSE流式响应
@@ -250,26 +243,29 @@ export async function POST(req: NextRequest) {
         try {
           // 发送开始元数据
           controller.enqueue(encoder.encode(
-            buildSSEMessage(SSEEventType.METADATA, JSON.stringify({
-              requestId: metrics.requestId,
-              timestamp: new Date().toISOString(),
-              model: 'gpt-4o-mini'
-            }), metrics.requestId)
+            buildSSEMessage(
+              SSEEventType.METADATA,
+              JSON.stringify({
+                requestId: metrics.requestId,
+                timestamp: new Date().toISOString(),
+                model,
+                provider,
+              }),
+              metrics.requestId
+            )
           ));
 
           for await (const chunk of stream) {
-            // 处理LangChain的AIMessageChunk
-            let content = '';
-            if (chunk && typeof chunk === 'object' && 'content' in chunk) {
-              content = (chunk as { content: string }).content;
-            } else if (typeof chunk === 'string') {
-              content = chunk;
-            }
-            
-            if (content && content.trim()) {
+            const token = chunk?.choices?.[0]?.delta?.content ?? '';
+
+            if (token && token.trim()) {
               metrics.messageCount++;
               controller.enqueue(encoder.encode(
-                buildSSEMessage(SSEEventType.CONTENT, content, `${metrics.requestId}-${metrics.messageCount}`)
+                buildSSEMessage(
+                  SSEEventType.CONTENT,
+                  token,
+                  `${metrics.requestId}-${metrics.messageCount}`
+                )
               ));
             }
           }

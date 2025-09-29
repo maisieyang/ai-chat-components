@@ -1,4 +1,5 @@
-// ChatMessage 接口定义 - 与 Vercel AI SDK 对齐
+import type { ReactNode } from 'react';
+
 export interface ReferenceLink {
   index: number;
   title: string;
@@ -36,4 +37,6 @@ export interface ChatWindowProps {
   title?: string;
   emptyState?: EmptyStateConfig;
   renderMessage?: (params: RenderMessageParams) => React.ReactNode;
+  requestMetadata?: Record<string, unknown>;
+  toolbarActions?: ReactNode;
 }

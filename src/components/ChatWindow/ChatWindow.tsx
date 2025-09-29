@@ -18,6 +18,8 @@ export function ChatWindow({
   title = 'AI Chat Assistant',
   emptyState,
   renderMessage,
+  requestMetadata,
+  toolbarActions,
 }: ChatWindowProps) {
   // 输入框引用
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -72,7 +74,7 @@ export function ChatWindow({
 
     const messageToSend = input.trim();
     setInput(''); // 立即清除输入框
-    await sendMessage(messageToSend);
+    await sendMessage(messageToSend, requestMetadata);
   };
 
   // 反馈处理函数
@@ -126,7 +128,14 @@ export function ChatWindow({
                   </span>
                 </div>
               </div>
-              <ThemeToggle />
+              <div className="flex items-center space-x-3">
+                {toolbarActions ? (
+                  <div className="flex items-center space-x-2 text-sm text-text-secondary">
+                    {toolbarActions}
+                  </div>
+                ) : null}
+                <ThemeToggle />
+              </div>
             </div>
 
         {/* 错误信息显示 */}
@@ -209,7 +218,7 @@ export function ChatWindow({
                       if (input.trim() && !isLoading) {
                         const messageToSend = input.trim();
                         setInput(''); // 立即清除输入框
-                        sendMessage(messageToSend);
+                        void sendMessage(messageToSend, requestMetadata);
                       }
                     }
                   }}
@@ -222,7 +231,7 @@ export function ChatWindow({
                   if (input.trim() && !isLoading) {
                     const messageToSend = input.trim();
                     setInput('');
-                    sendMessage(messageToSend);
+                    void sendMessage(messageToSend, requestMetadata);
                   }
                 }}
               />
