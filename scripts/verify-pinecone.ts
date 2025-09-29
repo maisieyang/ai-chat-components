@@ -1,15 +1,12 @@
 import 'dotenv/config';
 import { PineconeClient } from '@pinecone-database/pinecone';
-import { File } from 'undici';
+import { File as NodeFile } from 'node:buffer';
 import { getPineconeStore } from '../src/lib/vectorstore';
 
 // Polyfill File when the Node runtime does not provide it (e.g. dev server)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-if (typeof globalThis.File === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  globalThis.File = File;
+const globalWithFile = globalThis as unknown as { File?: typeof NodeFile };
+if (typeof globalWithFile.File === 'undefined') {
+  globalWithFile.File = NodeFile;
 }
 
 const REQUIRED_ENV_VARS = [
