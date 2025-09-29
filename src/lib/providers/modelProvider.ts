@@ -122,13 +122,19 @@ export async function embedTexts(
 
   const targetProvider = resolveProvider(provider);
   const { client, config } = getClient(targetProvider);
+  const batchSize = targetProvider === 'qwen' ? 10 : texts.length;
+  const embeddings: number[][] = [];
 
-  const response = await client.embeddings.create({
-    model: config.embeddingModel,
-    input: texts,
-  });
+  for (let start = 0; start < texts.length; start += batchSize) {
+    const batch = texts.slice(start, start + batchSize);
+    const response = await client.embeddings.create({
+      model: config.embeddingModel,
+      input: batch,
+    });
+    embeddings.push(...response.data.map((item) => item.embedding));
+  }
 
-  return response.data.map((item) => item.embedding);
+  return embeddings;
 }
 
 export async function embedText(text: string, provider?: string | ProviderName | null): Promise<number[]> {
