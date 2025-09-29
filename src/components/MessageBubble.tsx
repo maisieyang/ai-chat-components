@@ -57,23 +57,25 @@ export function MessageBubble({ message, className = '', onFeedback, isStreaming
                   )}
                 </div>
                 
-                {/* 消息操作栏 */}
-                <div className="flex items-center justify-between mt-3 opacity-60 hover:opacity-100 transition-opacity duration-200">
-                  <div className="flex items-center space-x-2">
-                    {message.timestamp && (
-                      <span className="text-xs text-text-tertiary">
-                        {formatTime(message.timestamp)}
-                      </span>
-                    )}
+                {/* 消息操作栏 - 仅在流式结束后显示 */}
+                {!isStreaming && (
+                  <div className="flex items-center justify-between mt-3 opacity-60 hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex items-center space-x-2">
+                      {message.timestamp && (
+                        <span className="text-xs text-text-tertiary">
+                          {formatTime(message.timestamp)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <MessageFeedback 
+                        messageId={message.timestamp?.getTime().toString() || 'unknown'}
+                        onFeedback={onFeedback}
+                      />
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <MessageFeedback 
-                      messageId={message.timestamp?.getTime().toString() || 'unknown'}
-                      onFeedback={onFeedback}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
