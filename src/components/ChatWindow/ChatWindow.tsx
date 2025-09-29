@@ -8,7 +8,7 @@ import { MessageBubble } from '../MessageBubble';
 import { ErrorMessage } from '../ErrorMessage';
 import { ScrollToBottomButton } from '../ScrollToBottomButton';
 import { ErrorBoundary } from '../ErrorBoundary';
-import { ThemeToggle } from '../ThemeToggle';
+import { ThemeSelector } from '../ThemeSelector';
 import { SendButton } from '../SendButton';
 
 export function ChatWindow({
@@ -134,7 +134,7 @@ export function ChatWindow({
                     {toolbarActions}
                   </div>
                 ) : null}
-                <ThemeToggle />
+                <ThemeSelector />
               </div>
             </div>
 
