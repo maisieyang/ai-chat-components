@@ -8,7 +8,10 @@ import {
   type ProviderChatMessage,
 } from '../providers/modelProvider';
 
-const DEFAULT_TEMPERATURE = 0.2;
+const DEFAULT_TEMPERATURE = 0.4;
+const DEFAULT_SIMILARITY_THRESHOLD = Number(process.env.SIMILARITY_THRESHOLD ?? '0.1');
+const SYSTEM_PROMPT =
+  'You are a helpful technical assistant. Answer user questions using relevant Confluence knowledge base context when available. If the context does not contain enough relevant information, provide a helpful answer using your general knowledge. Always be accurate and helpful.';
 
 interface AnswerReferences {
   index: number;
@@ -40,30 +43,29 @@ function buildContext(results: SearchResult[]): { context: string; references: A
       .join('\n');
   });
 
-  if (sections.length === 0) {
-    return {
-      context: 'No relevant context retrieved from the knowledge base.',
-      references,
-    };
-  }
-
   return {
     context: sections.join('\n\n---\n\n'),
     references,
   };
 }
 
-function buildPrompt(question: string, context: string, chatHistory?: string): string {
+function buildGuidelinePrompt(question: string, context: string, chatHistory?: string): string {
   const historySection = chatHistory?.trim()
     ? `Conversation History (most recent first):\n${chatHistory}\n\n`
     : '';
 
-  return `You are a banking knowledge assistant specialising in Confluence documentation. Answer the user's question using ONLY the provided context.
-- Cite references inline using the format [1], [2], etc.
-- If unsure, explicitly say you do not know.
-- Respond in professional Markdown without adding extra section headers like "Answer" or "References".
-- Highlight actionable steps when relevant and keep paragraphs concise for scanning.
+  return `## Guidelines
+- Prefer context when it is relevant (similarity score above threshold).
+- If context is irrelevant or insufficient, say so explicitly and provide a general helpful answer instead.
+- Cite references inline only when they are strongly related (format: [1], [2]).
+- Format output in ChatGPT-style Markdown:
+  - Use headers (##, ###) for structure
+  - Use emoji anchors 👉 ⚠️ ✅ 📝 for readability
+  - Use callouts (>) for important notes
+  - Include code blocks and examples when relevant
+- Keep paragraphs short and scannable.
 
+---
 ${historySection}Context:
 ${context}
 
@@ -74,7 +76,10 @@ export class QAEngine {
   constructor(
     private readonly store: PineconeStore,
     private readonly topK = 5,
-    private readonly defaultProvider: ProviderName = resolveProvider()
+    private readonly defaultProvider: ProviderName = resolveProvider(),
+    private readonly similarityThreshold: number = Number.isFinite(DEFAULT_SIMILARITY_THRESHOLD)
+      ? Math.min(Math.max(DEFAULT_SIMILARITY_THRESHOLD, 0), 1)
+      : 0.2
   ) {}
 
   async answerQuestion(
@@ -82,11 +87,11 @@ export class QAEngine {
     chatHistory?: string,
     providerOverride?: ProviderName | string
   ): Promise<AnswerResponse> {
-    const { prompt, references } = await this.prepare(question, chatHistory);
+    const { messages, references } = await this.prepare(question, chatHistory);
     const provider = resolveProvider(providerOverride ?? this.defaultProvider);
 
     const { text } = await chatCompletion({
-      messages: this.buildMessages(prompt),
+      messages,
       temperature: DEFAULT_TEMPERATURE,
       provider,
     });
@@ -101,11 +106,11 @@ export class QAEngine {
     chatHistory?: string,
     providerOverride?: ProviderName | string
   ) {
-    const { prompt, references } = await this.prepare(question, chatHistory);
+    const { messages, references } = await this.prepare(question, chatHistory);
     const provider = resolveProvider(providerOverride ?? this.defaultProvider);
 
     const { stream } = await chatCompletionStream({
-      messages: this.buildMessages(prompt),
+      messages,
       temperature: DEFAULT_TEMPERATURE,
       provider,
     });
@@ -122,15 +127,37 @@ export class QAEngine {
     }
 
     const results = await this.store.search(question, this.topK);
-    const { context, references } = buildContext(results);
-    const prompt = buildPrompt(question, context, chatHistory);
+    const relevantResults = results.filter((result) => result.score >= this.similarityThreshold);
 
-    return { prompt, references };
+    if (relevantResults.length === 0) {
+      return {
+        messages: this.buildFallbackMessages(question, chatHistory),
+        references: [],
+      };
+    }
+
+    const { context, references } = buildContext(relevantResults);
+    const prompt = buildGuidelinePrompt(question, context, chatHistory);
+
+    return {
+      messages: this.buildPromptMessages(prompt),
+      references,
+    };
   }
 
-  private buildMessages(prompt: string): ProviderChatMessage[] {
+  private buildPromptMessages(prompt: string): ProviderChatMessage[] {
     return [
-      { role: 'system', content: 'You are an expert assistant for banking documentation.' },
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: prompt },
+    ];
+  }
+
+  private buildFallbackMessages(question: string, chatHistory?: string): ProviderChatMessage[] {
+    const contextNotice = `No relevant Confluence context was retrieved above the similarity threshold (${this.similarityThreshold}). Please provide a helpful and accurate answer using your general knowledge.`;
+    const prompt = buildGuidelinePrompt(question, contextNotice, chatHistory);
+
+    return [
+      { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: prompt },
     ];
   }
