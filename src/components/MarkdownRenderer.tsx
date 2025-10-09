@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
-import { visit } from 'unist-util-visit';
+import { visit, EXIT } from 'unist-util-visit';
 import type {
   Root,
   Heading,
@@ -83,7 +83,7 @@ function createInlineReferenceParagraph(listNode: List): Paragraph | null {
       } as Link);
 
       linkAdded = true;
-      return visit.EXIT;
+      return EXIT;
     });
 
     if (!linkAdded) {
@@ -146,6 +146,10 @@ function bankingMarkdownFormatting() {
   };
 }
 
+// ReactMarkdown and unified types are slightly out of sync; coerce the plugin list.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const remarkPluginsList: any = [remarkGfm, remarkBreaks, bankingMarkdownFormatting];
+
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const { isDarkMode } = useDarkMode();
 
@@ -158,7 +162,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <div className="prose prose-lg max-w-none dark:prose-invert">
       <ReactMarkdown
         components={components}
-        remarkPlugins={[remarkGfm, remarkBreaks, bankingMarkdownFormatting]}
+        remarkPlugins={remarkPluginsList}
         rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema]]}
       >
         {content}

@@ -104,7 +104,15 @@ export function htmlToCleanMarkdown(title: string, html: string): string {
   $('script, style').remove();
 
   const mainContent = $('body').length ? $('body').html() ?? '' : $.root().html() ?? '';
-  const markdown = turndown.turndown(mainContent);
+  let markdown: string;
+
+  try {
+    markdown = turndown.turndown(mainContent);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn('Failed to convert Confluence HTML to markdown:', message);
+    markdown = $('body').text() ?? $.root().text() ?? '';
+  }
 
   const titleHeading = title ? `# ${title}\n\n` : '';
   return normaliseWhitespace(`${titleHeading}${markdown}`);
@@ -125,4 +133,3 @@ export function cleanConfluencePage(page: ConfluencePage): CleanConfluencePage |
     markdown,
   };
 }
-

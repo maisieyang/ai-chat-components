@@ -13,7 +13,6 @@ loadEnv({ path: '.env.local', override: true });
 const REQUIRED_ENV_VARS = [
   'OPENAI_API_KEY',
   'PINECONE_API_KEY',
-  'PINECONE_ENVIRONMENT',
   'PINECONE_INDEX_NAME',
 ];
 
@@ -24,6 +23,13 @@ function validateEnv() {
   const missing = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
   if (missing.length) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+
+  const hasHost = Boolean(process.env.PINECONE_HOST || process.env.PINECONE_INDEX_HOST);
+  const hasEnvironment = Boolean(process.env.PINECONE_ENVIRONMENT);
+
+  if (!hasHost && !hasEnvironment) {
+    throw new Error('Set PINECONE_HOST (or PINECONE_INDEX_HOST) for serverless indexes, or PINECONE_ENVIRONMENT for legacy indexes.');
   }
 }
 

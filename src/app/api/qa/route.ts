@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getKnowledgeBase, QAEngine } from '@/lib/pipeline';
+import { QAEngine } from '@/lib/pipeline';
+import { getPineconeStore } from '@/lib/vectorstore';
+import { resolveProvider } from '@/lib/providers/modelProvider';
 import type { ChatMessage } from '@/components/ChatWindow/types';
 
 export const runtime = 'nodejs';
@@ -24,9 +26,6 @@ interface PerformanceMetrics {
   messageCount: number;
   errorCount: number;
 }
-
-const DEFAULT_MAX_PAGES = Number(process.env.CONFLUENCE_MAX_PAGES ?? '1');
-const DEFAULT_PAGE_LIMIT = Number(process.env.CONFLUENCE_PAGE_LIMIT ?? '10');
 
 const buildSSEMessage = (type: SSEEventType, data: string, id?: string): string => {
   const message: SSEMessage = { type, data };
@@ -68,6 +67,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const messages: ChatMessage[] = body?.messages ?? [];
+    const requestedProvider = typeof body?.provider === 'string' ? body.provider : undefined;
+    const provider = resolveProvider(requestedProvider);
 
     if (!messages.length || !messages[messages.length - 1]?.content?.trim()) {
       throw new Error('Invalid request: missing messages or content.');
@@ -76,13 +77,13 @@ export async function POST(req: NextRequest) {
     const latestMessage = messages[messages.length - 1];
     const chatHistory = formatChatHistory(messages.slice(0, -1));
 
-    const knowledgeBase = await getKnowledgeBase({
-      maxPages: DEFAULT_MAX_PAGES,
-      pageLimit: DEFAULT_PAGE_LIMIT,
-    });
-
-    const qa = new QAEngine(knowledgeBase.store);
-    const { references, stream } = await qa.createStreamingCompletion(latestMessage.content, chatHistory);
+    const store = await getPineconeStore();
+    const qa = new QAEngine(store, undefined, provider);
+    const { references, stream } = await qa.createStreamingCompletion(
+      latestMessage.content,
+      chatHistory,
+      provider
+    );
 
     const readableStream = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
         try {
           send(
             SSEEventType.METADATA,
-            JSON.stringify({ requestId: metrics.requestId, references })
+            JSON.stringify({ requestId: metrics.requestId, references, provider })
           );
 
           let chunkIndex = 0;

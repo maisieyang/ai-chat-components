@@ -9,9 +9,9 @@ import {
 } from '../providers/modelProvider';
 
 const DEFAULT_TEMPERATURE = 0.4;
-const DEFAULT_SIMILARITY_THRESHOLD = Number(process.env.SIMILARITY_THRESHOLD ?? '0.1');
+const DEFAULT_SIMILARITY_THRESHOLD = Number(process.env.SIMILARITY_THRESHOLD ?? '0.75');
 const SYSTEM_PROMPT =
-  'You are a helpful technical assistant. Answer user questions using relevant Confluence knowledge base context when available. If the context does not contain enough relevant information, provide a helpful answer using your general knowledge. Always be accurate and helpful.';
+  'You are a professional banking documentation assistant integrated with Confluence. Your primary role is to answer user questions using relevant Confluence knowledge base context when available. If the context does not contain enough relevant information, gracefully fall back to your general knowledge.';
 
 interface AnswerReferences {
   index: number;
@@ -153,7 +153,7 @@ export class QAEngine {
   }
 
   private buildFallbackMessages(question: string, chatHistory?: string): ProviderChatMessage[] {
-    const contextNotice = `No relevant Confluence context was retrieved above the similarity threshold (${this.similarityThreshold}). Please provide a helpful and accurate answer using your general knowledge.`;
+    const contextNotice = `No relevant Confluence context was retrieved above the similarity threshold (${this.similarityThreshold}). Provide a helpful answer using your general knowledge and explicitly mention that the knowledge base did not contain enough information.`;
     const prompt = buildGuidelinePrompt(question, contextNotice, chatHistory);
 
     return [
