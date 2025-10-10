@@ -14,6 +14,20 @@ if (typeof globalWithFile.File === 'undefined') {
 const UPSERT_BATCH_SIZE = 50;
 const DEFAULT_NAMESPACE = process.env.PINECONE_NAMESPACE ?? 'default';
 
+function isNotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeStatus = (error as { status?: number }).status;
+  if (maybeStatus === 404) {
+    return true;
+  }
+
+  const message = typeof (error as { message?: unknown }).message === 'string' ? (error as { message: string }).message : '';
+  return message.includes('HTTP status 404') || message.includes('status 404') || message.includes('404 Not Found');
+}
+
 interface ParsedHost {
   host: string;
   environment: string;
@@ -201,7 +215,14 @@ export class PineconeStore {
 
   async deletePageChunks(pageId: string) {
     const target = await this.getTargetIndex();
-    await target.deleteMany({ filter: { page_id: pageId } });
+    try {
+      await target.deleteMany({ filter: { page_id: pageId } });
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        return;
+      }
+      throw error;
+    }
   }
 
   async search(query: string, topK = 5): Promise<SearchResult[]> {
@@ -251,7 +272,14 @@ export class PineconeStore {
     const target = await this.getTargetIndex();
     const actor = target as unknown as { deleteAll?: () => Promise<void> };
     if (typeof actor.deleteAll === 'function') {
-      await actor.deleteAll();
+      try {
+        await actor.deleteAll();
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          return;
+        }
+        throw error;
+      }
       return;
     }
 
