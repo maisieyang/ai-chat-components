@@ -216,7 +216,7 @@ export class PineconeStore {
   async deletePageChunks(pageId: string) {
     const target = await this.getTargetIndex();
     try {
-      await target.deleteMany({ filter: { page_id: { $eq: pageId } } });
+      await target.deleteMany({ page_id: { $eq: pageId } });
     } catch (error) {
       if (isNotFoundError(error)) {
         return;
