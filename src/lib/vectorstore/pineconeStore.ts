@@ -1,6 +1,6 @@
 import { Pinecone, type Index } from '@pinecone-database/pinecone';
 import { File as NodeFile } from 'node:buffer';
-import { embedTexts, embedText } from '../embeddings';
+import { embedTexts, embedText, getEmbeddingModelVersion } from '../providers/modelProvider';
 import type { PageChunk } from '../confluence/chunk';
 
 // Pinecone's client (via undici) expects a global File object when running under Node.
@@ -68,12 +68,20 @@ function parsePineconeHost(host: string, fallback?: { indexName?: string; projec
 }
 
 type ChunkMetadata = {
-  title: string;
-  url?: string;
+  page_id: string;
+  node_id: string;
+  page_title: string;
+  heading?: string;
+  heading_path?: string;
+  space_key?: string;
+  updated_at?: string;
+  etag?: string;
+  embed_version: string;
+  chunk_index: number;
+  token_estimate: number;
+  source_url?: string;
+  pii_flag: boolean;
   content: string;
-  chunkId: string;
-  pageId: string;
-  chunkIndex: number;
 };
 
 type PineconeVector = {
@@ -84,11 +92,20 @@ type PineconeVector = {
 
 export interface RetrievedChunk {
   id: string;
+  nodeId: string;
   pageId: string;
   title: string;
+  heading?: string;
+  headingPath?: string;
   content: string;
   sourceUrl?: string;
   chunkIndex: number;
+  tokenEstimate: number;
+  embedVersion: string;
+  updatedAt?: string;
+  etag?: string;
+  spaceKey?: string;
+  piiFlag: boolean;
 }
 
 export interface SearchResult {
@@ -148,8 +165,7 @@ export class PineconeStore {
       return;
     }
 
-    const index = await this.getIndex();
-    const target = this.namespace ? index.namespace(this.namespace) : index;
+    const target = await this.getTargetIndex();
 
     for (let start = 0; start < chunks.length; start += UPSERT_BATCH_SIZE) {
       const batch = chunks.slice(start, start + UPSERT_BATCH_SIZE);
@@ -161,12 +177,20 @@ export class PineconeStore {
           id: chunk.id,
           values: vector,
           metadata: {
-            title: chunk.title,
-            url: chunk.sourceUrl ?? undefined,
+            page_id: chunk.pageId,
+            node_id: chunk.nodeId,
+            page_title: chunk.title,
+            heading: chunk.heading,
+            heading_path: chunk.headingPathString,
+            space_key: chunk.spaceKey,
+            updated_at: chunk.updatedAt,
+            etag: chunk.etag,
+            embed_version: chunk.embedVersion,
+            chunk_index: chunk.chunkIndex,
+            token_estimate: chunk.tokenEstimate,
+            source_url: chunk.sourceUrl,
+            pii_flag: chunk.piiFlag,
             content: chunk.content,
-            chunkId: chunk.id,
-            pageId: chunk.pageId,
-            chunkIndex: chunk.chunkIndex,
           },
         };
       });
@@ -175,9 +199,13 @@ export class PineconeStore {
     }
   }
 
+  async deletePageChunks(pageId: string) {
+    const target = await this.getTargetIndex();
+    await target.deleteMany({ filter: { page_id: pageId } });
+  }
+
   async search(query: string, topK = 5): Promise<SearchResult[]> {
-    const index = await this.getIndex();
-    const target = this.namespace ? index.namespace(this.namespace) : index;
+    const target = await this.getTargetIndex();
     const queryEmbedding = await embedText(query);
 
     const response = await target.query({
@@ -194,16 +222,45 @@ export class PineconeStore {
         const metadata = match.metadata as ChunkMetadata;
         return {
           chunk: {
-            id: metadata.chunkId,
-            pageId: metadata.pageId,
-            title: metadata.title,
+            id: metadata.node_id,
+            nodeId: metadata.node_id,
+            pageId: metadata.page_id,
+            title: metadata.page_title,
+            heading: metadata.heading,
+            headingPath: metadata.heading_path,
             content: metadata.content,
-            sourceUrl: metadata.url,
-            chunkIndex: metadata.chunkIndex,
+            sourceUrl: metadata.source_url,
+            chunkIndex: metadata.chunk_index,
+            tokenEstimate: metadata.token_estimate,
+            embedVersion: metadata.embed_version ?? getEmbeddingModelVersion(),
+            updatedAt: metadata.updated_at,
+            etag: metadata.etag,
+            spaceKey: metadata.space_key,
+            piiFlag: Boolean(metadata.pii_flag),
           },
           score: match.score ?? 0,
         } as SearchResult;
       });
+  }
+
+  getNamespace(): string {
+    return this.namespace;
+  }
+
+  async clearNamespace(): Promise<void> {
+    const target = await this.getTargetIndex();
+    const actor = target as unknown as { deleteAll?: () => Promise<void> };
+    if (typeof actor.deleteAll === 'function') {
+      await actor.deleteAll();
+      return;
+    }
+
+    throw new Error('Pinecone client does not support deleteAll(). Upgrade @pinecone-database/pinecone to v1.1.0 or later.');
+  }
+
+  private async getTargetIndex(): Promise<Index> {
+    const index = await this.getIndex();
+    return this.namespace ? index.namespace(this.namespace) : index;
   }
 
   private async getIndex(): Promise<Index> {
@@ -260,3 +317,4 @@ export async function getPineconeStore(): Promise<PineconeStore> {
 
   return storePromise;
 }
+

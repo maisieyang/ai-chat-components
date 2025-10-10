@@ -191,6 +191,7 @@ export class ConfluenceClient {
       start: String(start),
       limit: String(limit),
     });
+    params.set('expand', 'body.storage,version,space');
 
     const resolvedSpaceKey = spaceKey ?? this.defaultSpaceKey;
     if (resolvedSpaceKey) {
@@ -220,7 +221,7 @@ export class ConfluenceClient {
 
   async fetchPageContent(pageId: string, signal?: AbortSignal): Promise<ConfluencePage> {
     const response = await this.request(
-      `rest/api/content/${pageId}?expand=body.storage,version`,
+      `rest/api/content/${pageId}?expand=body.storage,version,space`,
       {
         method: 'GET',
         signal,

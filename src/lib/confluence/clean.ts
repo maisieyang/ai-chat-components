@@ -65,6 +65,10 @@ export interface CleanConfluencePage {
   title: string;
   url?: string;
   markdown: string;
+  spaceKey?: string;
+  updatedAt?: string;
+  etag?: string;
+  versionNumber?: number;
 }
 
 export function htmlToCleanMarkdown(title: string, html: string): string {
@@ -125,11 +129,19 @@ export function cleanConfluencePage(page: ConfluencePage): CleanConfluencePage |
   }
 
   const markdown = htmlToCleanMarkdown(page.title, html);
+  const spaceKey = page.space?.key?.trim() || undefined;
+  const versionNumber = typeof page.version?.number === 'number' ? page.version.number : undefined;
+  const updatedAt = page.version?.when?.trim() || undefined;
+  const etag = versionNumber != null ? String(versionNumber) : updatedAt;
 
   return {
     pageId: page.id,
     title: page.title,
     url: page._links?.webui ? `${process.env.CONFLUENCE_BASE_URL ?? 'https://cwiki.apache.org/confluence'}${page._links.webui}` : undefined,
     markdown,
+    spaceKey,
+    updatedAt,
+    etag,
+    versionNumber,
   };
 }

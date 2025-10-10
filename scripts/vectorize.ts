@@ -63,9 +63,13 @@ async function runVectorization() {
   const duration = (Date.now() - start) / 1000;
 
   console.log('Vectorization completed successfully.');
-  console.log(`Pages processed: ${knowledgeBase.pages.length}`);
-  console.log(`Chunks generated: ${knowledgeBase.chunks.length}`);
+  console.log(`Embedding model version: ${knowledgeBase.stats.embedVersion}`);
+  console.log(`Pages scanned: ${knowledgeBase.stats.totalPages}`);
+  console.log(`Pages embedded: ${knowledgeBase.stats.embeddedPages}`);
+  console.log(`Pages skipped: ${knowledgeBase.stats.skippedPages}`);
+  console.log(`Chunks upserted: ${knowledgeBase.stats.embeddedChunks}`);
   console.log(`Elapsed time: ${duration.toFixed(2)}s`);
+  console.log('Metadata log written to logs/vectorize-last-run.json');
 }
 
 async function main() {

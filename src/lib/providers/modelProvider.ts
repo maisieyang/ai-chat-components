@@ -136,6 +136,17 @@ export async function embedTexts(
 
   return embeddings;
 }
+export function getEmbeddingModelInfo(provider?: string | ProviderName | null): { provider: ProviderName; model: string } {
+  const targetProvider = resolveProvider(provider ?? null);
+  const { config } = getClient(targetProvider);
+  return { provider: targetProvider, model: config.embeddingModel };
+}
+
+export function getEmbeddingModelVersion(provider?: string | ProviderName | null): string {
+  const info = getEmbeddingModelInfo(provider);
+  return `${info.provider}:${info.model}`;
+}
+
 
 export async function embedText(text: string, provider?: string | ProviderName | null): Promise<number[]> {
   const [embedding] = await embedTexts([text], provider);
