@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PromptTemplate } from "@langchain/core/prompts";
 import {
   chatCompletionStream,
   resolveProvider,
   type ProviderChatMessage,
 } from '@/lib/providers/modelProvider';
+import { UNIFIED_SYSTEM_PROMPT } from '@/lib/prompts/systemPrompts';
 
 export const runtime = "nodejs";
 
@@ -68,79 +68,6 @@ const logPerformanceMetrics = (metrics: PerformanceMetrics, error?: Error) => {
   }));
 };
 
-const TEMPLATE = `You are a technical writing assistant. Generate clear, well-structured technical responses using ChatGPT-style formatting.
-
-## Formatting Requirements
-
-Use standard Markdown syntax with proper spacing:
-
-- Headers: # Header, ## Subheader, ### Section
-- Lists: - Item or 1. Item (with space after marker)
-- Code: inline code and language blocks
-- Links: [text](url) with descriptive text
-- Tables: Standard Markdown table syntax
-
-## ChatGPT-Style Elements
-
-Include these visual elements for better readability:
-
-- **Emoji anchors**: Use 👉, ⚠️, ✅, 🔵, 📝, 🔗 for visual anchors
-- **Callout boxes**: Use > for important notes and warnings
-- **Visual separators**: Use --- between major sections
-- **Progressive disclosure**: Start with overview, then dive into details
-- **Interactive elements**: End with questions like "Would you like me to explain [specific aspect]?"
-
-## Response Structure
-
-Organize content with clear hierarchy:
-1. **Title + Background** → Set user expectations
-2. **Core content blocks** → Break down into digestible sections
-3. **Examples/Code** → Minimal runnable examples
-4. **Visual elements** → Use emojis and callouts for emphasis
-5. **Summary + Interaction** → Consolidate knowledge & guide next steps
-
-## Example Format
-
-# Main Topic
-
-Brief introduction with context.
-
-## Key Concepts
-
-👉 **Core Concept 1**: Brief explanation
-👉 **Core Concept 2**: Brief explanation
-
-### Implementation
-
-\`\`\`javascript
-// Minimal runnable example
-console.log('Hello World');
-\`\`\`
-
-> ⚠️ **Important**: Key takeaway or warning
-
----
-
-## Summary
-
-✅ **Key Points**:
-- Point 1
-- Point 2
-
-🔗 **References**: [Documentation](https://example.com)
-
-Would you like me to dive deeper into [specific aspect]?
-
----
-
-Chat History:
-{chat_history}
-
-User Input: {input}
-
-Provide a comprehensive technical response in ChatGPT-style Markdown format:`;
-
-const SYSTEM_PROMPT = 'You are a technical writing assistant. Produce clear technical answers, follow any formatting instructions provided by the user prompt, and keep responses concise yet complete.';
 
 export async function POST(req: NextRequest) {
   const metrics = createPerformanceMetrics();
@@ -217,15 +144,13 @@ export async function POST(req: NextRequest) {
 
     const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
     const currentMessageContent = messages[messages.length - 1].content;
-    const prompt = PromptTemplate.fromTemplate(TEMPLATE);
+    const promptContext = `Chat History:
+${formattedPreviousMessages.join('\n')}
 
-    const promptContext = await prompt.format({
-      chat_history: formattedPreviousMessages.join("\n"),
-      input: currentMessageContent,
-    });
+User Input: ${currentMessageContent}`;
 
     const providerMessages: ProviderChatMessage[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: UNIFIED_SYSTEM_PROMPT },
       { role: 'user', content: promptContext },
     ];
 
@@ -256,20 +181,22 @@ export async function POST(req: NextRequest) {
           ));
 
           for await (const chunk of stream) {
-            const token = chunk?.choices?.[0]?.delta?.content ?? '';
+            const token = chunk?.choices?.[0]?.delta?.content;
 
-            if (token && token.trim()) {
-              metrics.messageCount++;
-              controller.enqueue(encoder.encode(
-                buildSSEMessage(
-                  SSEEventType.CONTENT,
-                  token,
-                  `${metrics.requestId}-${metrics.messageCount}`
-                )
-              ));
+            if (typeof token !== 'string') {
+              continue;
             }
+
+            metrics.messageCount++;
+            controller.enqueue(encoder.encode(
+              buildSSEMessage(
+                SSEEventType.CONTENT,
+                token,
+                `${metrics.requestId}-${metrics.messageCount}`
+              )
+            ));
           }
-          
+
           // 发送完成信号
           controller.enqueue(encoder.encode(
             buildSSEMessage(SSEEventType.DONE, '', `${metrics.requestId}-done`)
