@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
 
     const { stream, model } = await chatCompletionStream({
       messages: providerMessages,
-      temperature: 0.7,
+      temperature: 0.4,
       provider,
     });
 
