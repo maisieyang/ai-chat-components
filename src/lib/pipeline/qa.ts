@@ -52,7 +52,7 @@ function buildContext(results: SearchResult[]): { context: string; references: A
   };
 }
 
-const FALLBACK_INSTRUCTIONS = `${QA_USER_PROMPT_INSTRUCTIONS}\n- Retrieval context was empty; inform the user before answering from general knowledge.`;
+const FALLBACK_INSTRUCTIONS = `Answer the user's question using your general knowledge.`;
 
 export class QAEngine {
   constructor(
@@ -120,8 +120,8 @@ export class QAEngine {
         instructions: FALLBACK_INSTRUCTIONS,
         contextSections: [
           {
-            title: 'Retrieval Context',
-            content: `No relevant Confluence context was retrieved above the similarity threshold (${this.similarityThreshold}).`,
+            title: 'Context',
+            content: `No relevant context found for this question.`,
           },
         ],
       });
@@ -146,7 +146,7 @@ export class QAEngine {
       chatHistory,
       instructions: QA_USER_PROMPT_INSTRUCTIONS,
       contextSections: [
-        { title: 'Retrieval Context', content: context },
+        { title: 'Context', content: context },
       ],
     });
 

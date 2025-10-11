@@ -111,4 +111,4 @@ export function tracePrompt(
   console.debug(JSON.stringify(payload));
 }
 
-export const QA_USER_PROMPT_INSTRUCTIONS = `### Task Overview\n- Follow the system-level guidelines above.\n- Use the retrieval context when it is relevant and cite sources inline (e.g., [1]).\n- If no meaningful context exists, explicitly mention this before answering from general knowledge.`;
+export const QA_USER_PROMPT_INSTRUCTIONS = `Answer the user's question using the provided context when relevant. If the context doesn't contain enough information, provide a helpful answer using your general knowledge.`;
