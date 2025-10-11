@@ -82,7 +82,8 @@ export async function POST(req: NextRequest) {
     const { references, stream } = await qa.createStreamingCompletion(
       latestMessage.content,
       chatHistory,
-      provider
+      provider,
+      { label: 'qa.prompt', requestId: metrics.requestId }
     );
 
     const readableStream = new ReadableStream<Uint8Array>({

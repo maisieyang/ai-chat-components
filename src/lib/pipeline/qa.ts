@@ -5,9 +5,13 @@ import {
   type ChatCompletionChunk,
   resolveProvider,
   type ProviderName,
-  type ProviderChatMessage,
 } from '../providers/modelProvider';
-import { UNIFIED_SYSTEM_PROMPT } from '../prompts/systemPrompts';
+import {
+  buildProviderMessages,
+  QA_USER_PROMPT_INSTRUCTIONS,
+  tracePrompt,
+  type PromptTraceMetadata,
+} from '../prompts/unifiedPrompt';
 
 const DEFAULT_TEMPERATURE = 0.4;
 const DEFAULT_SIMILARITY_THRESHOLD = Number(process.env.SIMILARITY_THRESHOLD ?? '0.75');
@@ -48,42 +52,7 @@ function buildContext(results: SearchResult[]): { context: string; references: A
   };
 }
 
-export const QA_ASSISTANT_PROMPT = `
-## Context Usage Guidelines
-
-### 🧠 Context Usage
-- Prefer **context** only when it is strongly relevant (high similarity score).  
-- If the context is irrelevant or incomplete, clearly say so and provide a **general helpful answer** instead.  
-- Use inline citations (\`[1]\`, \`[2]\`, etc.) **only when references are truly related**.  
-- Never invent or force references.
-
-### 🔍 Reference Policy
-- Cite only when the reference supports your answer directly.  
-- Inline format: \`[1]\`, \`[2]\`.  
-- Skip citation section if no relevant context exists.
-
-### ⚙️ Core Behaviors
-- Use context **only if relevant**  
-- **Never fabricate citations**  
-- Keep responses **clear, concise, and human-like**  
-- End with a **useful next-step question**
-`;
-
-
-function buildGuidelinePrompt(question: string, context: string, chatHistory?: string): string {
-  const historySection = chatHistory?.trim()
-    ? `Conversation History (most recent first):\n${chatHistory}\n\n`
-    : '';
-
-  const segments = [
-    QA_ASSISTANT_PROMPT.trim(),
-    historySection ? historySection.trimEnd() : null,
-    `Context:\n${context}`,
-    `Question: ${question}`,
-  ].filter(Boolean);
-
-  return segments.join('\n\n');
-}
+const FALLBACK_INSTRUCTIONS = `${QA_USER_PROMPT_INSTRUCTIONS}\n- Retrieval context was empty; inform the user before answering from general knowledge.`;
 
 export class QAEngine {
   constructor(
@@ -98,9 +67,10 @@ export class QAEngine {
   async answerQuestion(
     question: string,
     chatHistory?: string,
-    providerOverride?: ProviderName | string
+    providerOverride?: ProviderName | string,
+    trace?: PromptTraceMetadata
   ): Promise<AnswerResponse> {
-    const { messages, references } = await this.prepare(question, chatHistory);
+    const { messages, references } = await this.prepare(question, chatHistory, trace);
     const provider = resolveProvider(providerOverride ?? this.defaultProvider);
 
     const { text } = await chatCompletion({
@@ -117,9 +87,10 @@ export class QAEngine {
   async createStreamingCompletion(
     question: string,
     chatHistory?: string,
-    providerOverride?: ProviderName | string
+    providerOverride?: ProviderName | string,
+    trace?: PromptTraceMetadata
   ) {
-    const { messages, references } = await this.prepare(question, chatHistory);
+    const { messages, references } = await this.prepare(question, chatHistory, trace);
     const provider = resolveProvider(providerOverride ?? this.defaultProvider);
 
     const { stream } = await chatCompletionStream({
@@ -134,7 +105,7 @@ export class QAEngine {
     };
   }
 
-  private async prepare(question: string, chatHistory?: string) {
+  private async prepare(question: string, chatHistory?: string, trace?: PromptTraceMetadata) {
     if (!question.trim()) {
       throw new Error('Question must not be empty');
     }
@@ -143,35 +114,53 @@ export class QAEngine {
     const relevantResults = results.filter((result) => result.score >= this.similarityThreshold);
 
     if (relevantResults.length === 0) {
+      const { messages } = buildProviderMessages({
+        question,
+        chatHistory,
+        instructions: FALLBACK_INSTRUCTIONS,
+        contextSections: [
+          {
+            title: 'Retrieval Context',
+            content: `No relevant Confluence context was retrieved above the similarity threshold (${this.similarityThreshold}).`,
+          },
+        ],
+      });
+
+      tracePrompt(
+        {
+          label: trace?.label ?? 'qa.prompt.fallback',
+          requestId: trace?.requestId,
+        },
+        messages
+      );
+
       return {
-        messages: this.buildFallbackMessages(question, chatHistory),
+        messages,
         references: [],
       };
     }
 
     const { context, references } = buildContext(relevantResults);
-    const prompt = buildGuidelinePrompt(question, context, chatHistory);
+    const { messages } = buildProviderMessages({
+      question,
+      chatHistory,
+      instructions: QA_USER_PROMPT_INSTRUCTIONS,
+      contextSections: [
+        { title: 'Retrieval Context', content: context },
+      ],
+    });
+
+    tracePrompt(
+      {
+        label: trace?.label ?? 'qa.prompt',
+        requestId: trace?.requestId,
+      },
+      messages
+    );
 
     return {
-      messages: this.buildPromptMessages(prompt),
+      messages,
       references,
     };
-  }
-
-  private buildPromptMessages(prompt: string): ProviderChatMessage[] {
-    return [
-      { role: 'system', content: UNIFIED_SYSTEM_PROMPT },
-      { role: 'user', content: prompt },
-    ];
-  }
-
-  private buildFallbackMessages(question: string, chatHistory?: string): ProviderChatMessage[] {
-    const contextNotice = `No relevant Confluence context was retrieved above the similarity threshold (${this.similarityThreshold}). Provide a helpful answer using your general knowledge and explicitly mention that the knowledge base did not contain enough information.`;
-    const prompt = buildGuidelinePrompt(question, contextNotice, chatHistory);
-
-    return [
-      { role: 'system', content: UNIFIED_SYSTEM_PROMPT },
-      { role: 'user', content: prompt },
-    ];
   }
 }

@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   chatCompletionStream,
   resolveProvider,
-  type ProviderChatMessage,
 } from '@/lib/providers/modelProvider';
-import { UNIFIED_SYSTEM_PROMPT } from '@/lib/prompts/systemPrompts';
+import { buildProviderMessages, tracePrompt } from '@/lib/prompts/unifiedPrompt';
 
 export const runtime = "nodejs";
 
@@ -38,6 +37,10 @@ interface VercelChatMessage {
 }
 
 const formatMessage = (message: VercelChatMessage) => `${message.role}: ${message.content}`;
+
+const CHAT_USER_PROMPT_INSTRUCTIONS = `### Task
+- Follow the system guidelines above.
+- Use the conversation history for additional context when crafting your response.`;
 
 // SSE消息构建函数
 const buildSSEMessage = (type: SSEEventType, data: string, id?: string): string => {
@@ -143,16 +146,16 @@ export async function POST(req: NextRequest) {
     }
 
     const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
+    const chatHistory = formattedPreviousMessages.join('\n');
     const currentMessageContent = messages[messages.length - 1].content;
-    const promptContext = `Chat History:
-${formattedPreviousMessages.join('\n')}
 
-User Input: ${currentMessageContent}`;
+    const { messages: providerMessages } = buildProviderMessages({
+      question: currentMessageContent,
+      chatHistory: chatHistory || undefined,
+      instructions: CHAT_USER_PROMPT_INSTRUCTIONS,
+    });
 
-    const providerMessages: ProviderChatMessage[] = [
-      { role: 'system', content: UNIFIED_SYSTEM_PROMPT },
-      { role: 'user', content: promptContext },
-    ];
+    tracePrompt({ label: 'chat.prompt', requestId: metrics.requestId }, providerMessages);
 
     const { stream, model } = await chatCompletionStream({
       messages: providerMessages,
