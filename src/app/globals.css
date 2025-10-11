@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./code-theme.css";
 
 /* ===== ChatGPT风格主题系统 ===== */
 
@@ -16,9 +17,27 @@
   --default-theme-entity-accent: #0169cc;
   
   /* 代码块颜色 */
-  --code-bg: #f8f9fa;
-  --code-border: #e9ecef;
+  --code-bg: #f6f8fa;
+  --code-border: #d0d7de;
   --code-text: #24292e;
+  --code-fg: #24292e;
+  --inline-bg: rgba(240, 246, 252, 0.5);
+  --inline-fg: #24292e;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --token-keyword: #d73a49;
+  --token-string: #032f62;
+  --token-number: #005cc5;
+  --token-function: #6f42c1;
+  --token-comment: #6a737d;
+  --token-operator: #586069;
+  --token-default: #24292e;
+  --code-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+  --code-toolbar-bg: rgba(246, 248, 250, 0.85);
+  --code-toolbar-border: rgba(208, 215, 222, 0.7);
+  --code-toolbar-text: #5b6572;
+  --code-copy-bg: rgba(246, 248, 250, 0.9);
+  --code-copy-border: rgba(208, 215, 222, 0.85);
+  --code-copy-text: #4c5664;
   
   /* Callout颜色 */
   --callout-info-bg: #dbeafe;
@@ -110,6 +129,25 @@
   --composer-blue-hover: #1a416a;
   --composer-blue-text: #48aaff;
   --composer-surface-primary: #303030;
+  --code-bg: #1e1e1e;
+  --code-fg: #c9d1d9;
+  --code-border: #2d333b;
+  --code-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --inline-bg: rgba(110, 118, 129, 0.2);
+  --inline-fg: #c9d1d9;
+  --token-keyword: #ff7b72;
+  --token-string: #a5d6ff;
+  --token-number: #79c0ff;
+  --token-function: #d2a8ff;
+  --token-comment: #8b949e;
+  --token-operator: #8b949e;
+  --token-default: #c9d1d9;
+  --code-toolbar-bg: rgba(30, 30, 30, 0.65);
+  --code-toolbar-border: rgba(48, 54, 61, 0.9);
+  --code-toolbar-text: #9ca3af;
+  --code-copy-bg: rgba(48, 54, 61, 0.8);
+  --code-copy-border: rgba(71, 78, 85, 0.9);
+  --code-copy-text: #c9d1d9;
   --dot-color: var(--white);
   --text-primary: var(--gray-100);
   --icon-surface: 240 240 240;

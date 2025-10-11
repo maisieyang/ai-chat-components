@@ -20,79 +20,49 @@ export function createMarkdownComponents({ isDarkMode }: MarkdownComponentsProps
     const code = String(children).replace(/\n$/, '');
 
     return (
-      <div className="relative group my-6">
-        <div 
-          className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition-all duration-300" 
-          style={{ 
-            backgroundColor: 'var(--main-surface-tertiary)',
-            borderColor: 'var(--border-light)'
-          }}
-        >
-          {language && (
-            <div 
-              className="flex items-center justify-between px-4 py-3 border-b" 
-              style={{
-                backgroundColor: 'var(--main-surface-secondary)',
-                borderColor: 'var(--border-light)'
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                </div>
-                <span 
-                  className="text-xs font-medium uppercase tracking-wide px-2 py-1 rounded" 
-                  style={{ 
-                    color: 'var(--text-tertiary)',
-                    backgroundColor: 'var(--main-surface-tertiary)'
-                  }}
-                >
-                  {language}
-                </span>
-              </div>
-              <CodeCopyButton code={code} />
-            </div>
-          )}
-          <div className="p-4 overflow-x-auto">
-            <SyntaxHighlighter
-              style={isDarkMode ? chatgptDarkTheme : chatgptTheme}
-              language={language}
-              PreTag="div"
-              className="!bg-transparent !p-0 text-sm leading-relaxed"
-              {...rest}
-            >
-              {code}
-            </SyntaxHighlighter>
+      <figure className="code-block-shell group">
+        <div className="code-block-toolbar">
+          <div className="flex items-center gap-2 text-[0.7rem] tracking-[0.3em]">
+            <span className="code-window-dots">
+              <span className="code-window-dot dot-red" />
+              <span className="code-window-dot dot-yellow" />
+              <span className="code-window-dot dot-green" />
+            </span>
+            <span className="code-language-tag">{language || 'code'}</span>
           </div>
+          <CodeCopyButton code={code} className="code-copy-button" />
         </div>
-      </div>
+        <SyntaxHighlighter
+          style={isDarkMode ? chatgptDarkTheme : chatgptTheme}
+          language={language || undefined}
+          PreTag="pre"
+          CodeTag="code"
+          className="code-block"
+          wrapLongLines
+          {...rest}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </figure>
     );
   };
 
   // 内联代码渲染器
-  const renderInlineCode = (props: any) => (
-    <code 
-      className="px-2 py-1 rounded text-sm font-mono border" 
-      style={{ 
-        backgroundColor: 'var(--main-surface-tertiary)',
-        color: 'var(--text-primary)',
-        borderColor: 'var(--border-light)'
-      }} 
-      {...props}
-    />
+  const renderInlineCode = ({ children, ...props }: any) => (
+    <code className="inline-code" {...props}>
+      {children}
+    </code>
   );
 
   // 代码渲染器（统一处理内联和块级）
   const code = ({ children, className, ...props }: any) => {
     const match = /language-(\w+)/.exec(className || '');
     const isInline = !match;
-    
+
     if (isInline) {
       return renderInlineCode({ children, ...props });
     }
-    
+
     return renderCodeBlock({ children, className, ...props });
   };
 

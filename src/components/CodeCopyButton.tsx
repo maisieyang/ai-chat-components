@@ -23,11 +23,7 @@ export function CodeCopyButton({ code, className = '' }: CodeCopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className={`opacity-0 group-hover:opacity-100 transition-all duration-200 p-2 rounded-lg hover:scale-105 active:scale-95 ${className}`}
-      style={{
-        backgroundColor: 'var(--main-surface-elevated)',
-        color: 'var(--text-secondary)',
-      }}
+      className={`code-copy-button opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
       title={copied ? '已复制!' : '复制代码'}
     >
       {copied ? (
