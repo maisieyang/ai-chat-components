@@ -112,21 +112,6 @@ export function ChatWindow({
                 <h1 className="text-xl font-semibold text-text-primary">
                   {title}
                 </h1>
-                {/* 连接状态指示器 */}
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    connectionStatus === 'connected' ? 'bg-success' :
-                    connectionStatus === 'connecting' ? 'bg-warning animate-pulse' :
-                    connectionStatus === 'error' ? 'bg-error' :
-                    'bg-text-tertiary'
-                  }`}></div>
-                  <span className="text-sm text-text-tertiary">
-                    {connectionStatus === 'connected' ? '已连接' :
-                     connectionStatus === 'connecting' ? '连接中...' :
-                     connectionStatus === 'error' ? '连接错误' :
-                     '未连接'}
-                  </span>
-                </div>
               </div>
               <div className="flex items-center space-x-3">
                 {toolbarActions ? (
