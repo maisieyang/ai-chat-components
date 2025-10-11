@@ -154,7 +154,7 @@ export function ChatWindow({
         >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-text-tertiary">
-              <div className="text-center max-w-md">
+              <div className="text-center">
                 {computedEmptyState.icon && (
                   <div className="text-6xl mb-4">{computedEmptyState.icon}</div>
                 )}
