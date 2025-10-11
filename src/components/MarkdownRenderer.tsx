@@ -119,12 +119,6 @@ function bankingMarkdownFormatting() {
         const heading = node as Heading;
         const text = extractHeadingText(heading);
 
-        if (text === 'answer') {
-          nodes.splice(i, 1);
-          i -= 1;
-          continue;
-        }
-
         if (text === 'references') {
           nodes.splice(i, 1);
 
